@@ -184,7 +184,7 @@ if exist('world_mask','var')
 end
 
 if ~any(buffer(:))
-    fprintf('\t\t %s not at coast, no coast buffer needed\n',cbar_label(:))
+    fprintf('\t\t %s not at coast, no coast buffer needed\n',char(cbar_label(:)))
     no_pixel_hollow = 0;
 end
 
