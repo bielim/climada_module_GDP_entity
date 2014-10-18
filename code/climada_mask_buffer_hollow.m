@@ -1,5 +1,5 @@
 function matrix_buffer = climada_mask_buffer_hollow(matrix, no_pixel_buffer, no_pixel_hollow, border_mask, ...
-                                                    check_figure, check_printplot, printname, cbar_label)
+                                                    check_figure, check_printplot, printname, cbar_label, no_wbar)
 
 % create buffer around country (matrix masking 1 for onland (or higher 
 % values if more than one country), 0 for sea, max value for bufferzone)
@@ -28,6 +28,7 @@ function matrix_buffer = climada_mask_buffer_hollow(matrix, no_pixel_buffer, no_
 %   check_printplot : set to 1 to save figure
 %   printname       : string for title and for filename if saved
 %   cbar_label      : label for colorbar (ISO3 codes for country names)
+%   no_wbar         : 1 for not waitbar, otherwise waitbar will show up
 % OUTPUTS:
 %   matrix_buffer   : matrix masking 1 for on land, zero for on sea, and
 %                     max value for bufferzone
@@ -46,6 +47,7 @@ if ~exist('check_figure'    , 'var'), check_figure    = 1 ; end
 if ~exist('check_printplot' , 'var'), check_printplot = []; end
 if ~exist('printname'       , 'var'), printname       = ''; end
 if ~exist('cbar_label'      , 'var'), cbar_label      = ''; end
+if ~exist('no_wbar'         , 'var'), no_wbar         = 0; end
 
 % set modul data directory
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
@@ -127,19 +129,22 @@ border_pix(border_pix>1) = 1;
 buffer      = zeros(size(border_pix));
 no_pixel    = no_pixel_buffer;
 waitbar_tot = no_pixel*2+no_pixel^2*4;
-h           = waitbar(0, sprintf('Create buffer around mask %i records...',waitbar_tot));
+if ~no_wbar
+    h = waitbar(0, sprintf('Go through %i shift of masks', waitbar_tot),'Name', 'Create buffer around country mask');
+end
 
 %identify neighbouring pixel - horizontally and vertically
 for p_i = 1:no_pixel
     buffer = buffer + [border_pix(:,p_i+1:end) zeros(size(nonzero_index,1),p_i)];
     buffer = buffer + [border_pix(p_i+1:end,:); zeros(p_i,size(nonzero_index,2))];
 end
-waitbar(no_pixel/waitbar_tot,h)
+if ~no_wbar, waitbar(no_pixel/waitbar_tot,h), end
 for p_i = 1:no_pixel
     buffer = buffer + [zeros(size(nonzero_index,1),p_i) border_pix(:,1:end-p_i)];
     buffer = buffer + [zeros(p_i,size(nonzero_index,2)); border_pix(1:end-p_i,:)];
 end
-waitbar(2*no_pixel/waitbar_tot,h)
+if ~no_wbar, waitbar(2*no_pixel/waitbar_tot,h), end
+
 % diagonal 1: top right
 for p_i = 1:no_pixel  
     for p2_i = 1:no_pixel
@@ -147,7 +152,8 @@ for p_i = 1:no_pixel
                            zeros(size(border_pix,1)-p2_i,p_i) border_pix(1:end-p2_i, 1:end-p_i)];  
     end
 end 
-waitbar((2*no_pixel+no_pixel^2)/waitbar_tot,h)
+if ~no_wbar, waitbar((2*no_pixel+no_pixel^2)/waitbar_tot,h), end
+
 % diagonal 2: top left
 for p_i = 1:no_pixel    
     for p2_i = 1:no_pixel
@@ -155,7 +161,7 @@ for p_i = 1:no_pixel
                            border_pix(1:end-p2_i,1+p_i:end) zeros(size(border_pix,1)-p2_i,p_i) ];  
     end
 end 
-waitbar((2*no_pixel+2*no_pixel^2)/waitbar_tot,h)
+if ~no_wbar, waitbar((2*no_pixel+2*no_pixel^2)/waitbar_tot,h), end
 % diagonal 3: bottom left 
 for p_i = 1:no_pixel    
     for p2_i = 1:no_pixel
@@ -163,7 +169,7 @@ for p_i = 1:no_pixel
                            zeros(p2_i,size(border_pix,2))];  
     end
 end 
-waitbar((2*no_pixel+3*no_pixel^2)/waitbar_tot,h)
+if ~no_wbar, waitbar((2*no_pixel+3*no_pixel^2)/waitbar_tot,h), end
 % diagonal 4: bottom right   
 for p_i = 1:no_pixel    
     for p2_i = 1:no_pixel
@@ -171,8 +177,10 @@ for p_i = 1:no_pixel
                            zeros(p2_i,size(border_pix,2))];  
     end
 end 
-waitbar((2*no_pixel+4*no_pixel^2)/waitbar_tot,h)
-close(h) % close waitbar
+if ~no_wbar
+    waitbar((2*no_pixel+4*no_pixel^2)/waitbar_tot,h)
+    close(h) % close waitbar
+end
 
 
 % --- 3) fill buffer with bufferzone value-----
@@ -189,25 +197,28 @@ if ~any(buffer(:))
 end
 
 
-% 4) ----hollow out----
+% 4) ----HOLLOW OUT----
 if no_pixel_hollow > 0
     % identify sea border
     no_pixel    = no_pixel_hollow;
     hollow      = zeros(size(buffer));
     waitbar_tot = no_pixel*2+no_pixel^2*4;
-    h           = waitbar(0, sprintf('Hollowout mask %i records...',waitbar_tot));
+    if ~no_wbar
+        h = waitbar(0, sprintf('Go through %i shift of masks', waitbar_tot),'Name', 'Hollow out country mask');
+    end
 
     %identify neighbouring pixel - horizontally and vertically
     for p_i = 1:no_pixel
         hollow = hollow + [buffer(:,p_i+1:end)  zeros(size(nonzero_index,1),p_i)];
         hollow = hollow + [buffer(p_i+1:end,:); zeros(p_i,size(nonzero_index,2))];
     end
-    waitbar(no_pixel/waitbar_tot,h)
+    if ~no_wbar, waitbar(no_pixel/waitbar_tot,h), end
+    
     for p_i = 1:no_pixel
         hollow = hollow + [zeros(size(nonzero_index,1),p_i)  buffer(:,1:end-p_i)];
         hollow = hollow + [zeros(p_i,size(nonzero_index,2)); buffer(1:end-p_i,:)];
     end
-    waitbar(2*no_pixel/waitbar_tot,h)
+    if ~no_wbar, waitbar(2*no_pixel/waitbar_tot,h), end
 
     % diagonal 1: top right
     for p_i = 1:no_pixel  
@@ -216,7 +227,8 @@ if no_pixel_hollow > 0
                                zeros(size(buffer,1)-p2_i,p_i) buffer(1:end-p2_i, 1:end-p_i)];  
         end
     end 
-    waitbar((2*no_pixel+1*no_pixel^2)/waitbar_tot,h)
+    if ~no_wbar, waitbar((2*no_pixel+1*no_pixel^2)/waitbar_tot,h), end
+    
     % diagonal 2: top left
     for p_i = 1:no_pixel    
         for p2_i = 1:no_pixel
@@ -224,7 +236,8 @@ if no_pixel_hollow > 0
                                buffer(1:end-p2_i,1+p_i:end) zeros(size(buffer,1)-p2_i,p_i) ];  
         end
     end 
-    waitbar((2*no_pixel+2*no_pixel^2)/waitbar_tot,h)
+    if ~no_wbar, waitbar((2*no_pixel+2*no_pixel^2)/waitbar_tot,h), end
+    
     % diagonal 3: bottom left 
     for p_i = 1:no_pixel    
         for p2_i = 1:no_pixel
@@ -232,7 +245,8 @@ if no_pixel_hollow > 0
                                zeros(p2_i,size(buffer,2))];  
         end
     end 
-    waitbar((2*no_pixel+3*no_pixel^2)/waitbar_tot,h)
+    if ~no_wbar, waitbar((2*no_pixel+3*no_pixel^2)/waitbar_tot,h), end
+    
     % diagonal 4: bottom right   
     for p_i = 1:no_pixel    
         for p2_i = 1:no_pixel
@@ -240,8 +254,10 @@ if no_pixel_hollow > 0
                                zeros(p2_i,size(buffer,2))];  
         end
     end 
-    waitbar((2*no_pixel+4*no_pixel^2)/waitbar_tot,h)
-    close(h) % close waitbar
+    if ~no_wbar
+        waitbar((2*no_pixel+4*no_pixel^2)/waitbar_tot,h)
+        close(h) % close waitbar
+    end
  
     hollow(hollow>1) = 1;
     hollow_ori       = hollow;
@@ -284,7 +300,9 @@ if check_figure
     colormap([1 1 1;...
               jet(bufferzone_value-1);...
               [205 193 197 ]/255])
-    imagesc([min(X(:)) max(X(:))], [min(Y(:)) max(Y(:))], matrix_buffer)
+    %imagesc([min(X(:)) max(X(:))], [min(Y(:)) max(Y(:))], matrix_buffer)
+    imagesc([min(X(:)) max(X(:))], [min(Y(:)) max(Y(:))], values_distributed.values)
+    
     climada_plot_world_borders
     axis equal
     axis(axislim)

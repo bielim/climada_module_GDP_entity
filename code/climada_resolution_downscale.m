@@ -115,7 +115,7 @@ resolution_km   = round(res_factor*resolution_x_km);
                    high_resolution_matrix.lat_range(1)+resolution_y*res_factor/2: resolution_y*res_factor: high_resolution_matrix.lat_range(2)-resolution_y*res_factor/2 );
                
 if res_factor == 1
-    fprintf('\t\t Requested resolution (%d km) corresonds already to input matrix (%4.2f km)\n', resolution_km, resolution_x_km)
+    fprintf('\t\t Requested resolution (%d km) corresponds already to input matrix (%4.2f km)\n', resolution_km, resolution_x_km)
     low_resolution_matrix = high_resolution_matrix;
     return
 end

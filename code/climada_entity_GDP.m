@@ -1,4 +1,4 @@
-function entity = climada_entity_GDP(entity_base, GDP, year_start, centroids, borders, check_figure, check_printplot) 
+function entity = climada_entity_GDP(entity_base, GDP, year_requested, centroids, borders, check_figure, check_printplot) 
 
 % upscale given base entity (sum of assets is 100, or less if only coastal
 % areas) to match the GDP of a specific country for a given year
@@ -18,7 +18,7 @@ function entity = climada_entity_GDP(entity_base, GDP, year_start, centroids, bo
 % OPTIONAL INPUTS:
 %   GDP       : GDP data within a structure, prompted for if not given, loaded
 %               automatically from GDP.mat file if existing
-%   year_start: year for GDP for a given country, default
+%   year_requested: year for GDP for a given country, default
 %               climada_global.present_reference_year
 %   centroids : prompted if not given, centroids with field .country_name
 %               for each centroid indicating the country matching with GDP data
@@ -49,22 +49,24 @@ if ~climada_init_vars,return;end % init/import global variables
 % poor man's version to check arguments
 if ~exist('entity_base'    , 'var'), entity_base     = [];end
 if ~exist('GDP'            , 'var'), GDP             = [];end
-if ~exist('year_start'     , 'var'), year_start      = climada_global.present_reference_year;end
+if ~exist('year_requested' , 'var'), year_requested  = climada_global.present_reference_year;end
 if ~exist('centroids'      , 'var'), centroids       = [];end
 if ~exist('borders'        , 'var'), borders         = [];end
 if ~exist('check_figure'   , 'var'), check_figure    = 1 ;end
 if ~exist('check_printplot', 'var'), check_printplot = [];end
 
 silent_mode         = 0;
-check_figure_entity = 1;
+check_figure_entity = check_figure;
+% check_figure_entity = 1;
 % set modul data directory
 modul_data_dir      = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
+entity              = []; 
 
 if isempty(entity_base)
     entity_base = climada_entity_load;
 end
 
-fprintf('Step 1: Base entity to GDP 2010 (latest year of available GDP  information)\n')
+fprintf('Step 1: Base entity to GDP %d (latest year of available GDP information)\n', 2010)
 
 
 %% read/load GDP data per country from 1960 to 2010
@@ -84,26 +86,30 @@ if isempty(GDP)
             end
             GDP = climada_GDP_read(xls_filename, 1, 1, 1);
             if isempty(GDP)
-                entity = []; fprintf('GDP data not available.\n'); return
+                fprintf('\t\t GDP data not available.\n'); return
             else
                 save(strrep(xls_filename,'.xls','.mat'), 'GDP')
             end
         else
             fprintf('\t\t GDP data %s not found. Unable to proceed. \n', xls_filename)
-            entity = []; 
             return
         end
     end
 end
 
+GDP_latest_year     = max(GDP.year);
+fprintf('\t\t GDP data cover year %d to %d. \n', min(GDP.year), GDP_latest_year)
+
+if year_requested < min(GDP.year)
+    fprintf('\t\t Requested year (%d) lies to far back. Unable to proceed.\n', year_requested)
+    return
+end
 
 
 %% economic development (asset upscaling)
-if year_start>2010
-    year_start_ori = year_start;
-    year_start     = 2010;
-else
-    year_start_ori = year_start;
+if year_requested > GDP_latest_year
+    year_requested_step_2 = year_requested;
+    year_requested        = GDP_latest_year;
 end
 
 % prompt for centroids if not given
@@ -126,26 +132,10 @@ end
 
 % prompt for borders if not given
 if isempty(borders) 
-    if isfield(climada_global,'map_border_file')
-        map_border_file = strrep(climada_global.map_border_file,'.gen','.mat');
-    else
-        fprintf('\t\t no map found\n Unable to proceed.\n')
-        return
-    end
-    try
-       load(map_border_file)
-    catch err
-        fprintf('\t\t create and save world borders as mat-file...')
-        climada_plot_world_borders
-        close   
-        fprintf('done\n')
-        load(map_border_file)
-    end
+    borders = climada_load_world_borders;
 end
-if ~isfield(borders,'region')
-    borders = climada_borders_region(borders,[],0);
-end
-
+if isempty(borders), fprintf('\t\t no map found\n Unable to proceed.\n'), return, end
+    
 
 %% basic check if entity matches with centroids
 uni_index = unique(entity_base.assets.centroid_index);
@@ -213,35 +203,39 @@ for c_i = 1:length(country_uni)
     if any(c_index) & any(~isnan(GDP.value(c_index,:))) & any(nonzeros(GDP.value(c_index,:)))
         
         %% check if requested year is within the forecasted values
-        %year_f_index = find(GDP.year == year_forecast);
-        year_s_index = find(GDP.year == year_start, 1);
+        year_s_index = find(GDP.year == year_requested, 1);
         if isempty(year_s_index); year_s_index = 1; end
         
         % calculate scaleup_factor as 
         % factor = "GDP for a given country and year" / "sum(assets)", whereas sum(assets) is 100 as defined by entity_base
         % factor = "GDP for a given country and year" / 100
-        GDP_val        = GDP.value(c_index,year_s_index);
+        GDP_val        = GDP.value(c_index, year_s_index);
+        if isnan(GDP_val)
+            fprintf('\t\t No GDP value for year %d available. Unable to proceed.\n', year_requested)
+            return
+        end
         scaleup_factor = GDP_val / 100;
         entity         = climada_entity_scaleup_factor(entity_base, scaleup_factor); 
-        fprintf('\t\t GDP for %s in %d is %2.4g USD (current) \n',GDP.country_names{c_index}, year_start, GDP_val);
+        fprintf('\t\t GDP for %s in %d is %2.4g USD (current) \n',GDP.country_names{c_index}, year_requested, GDP_val);
+        entity.assets.reference_year = year_requested;
         
         if sum(entity_base.assets.Value) >= 99.5 &  sum(entity_base.assets.Value) <= 100.5 
             fprintf('\t\t Entity assets covers %2.1f%% of %s, i.e. GDP for entire %s in %d is %2.4g USD\n',...
-                     sum(entity_base.assets.Value), GDP.country_names{c_index}, GDP.country_names{c_index}, year_start, sum(entity.assets.Value));
+                     sum(entity_base.assets.Value), GDP.country_names{c_index}, GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         elseif sum(entity_base.assets.Value) <100
             fprintf('\t\t Entity assets covers %2.1f%% of %s, i.e. GDP for that region in %d is %2.4g USD\n',...
-                     sum(entity_base.assets.Value), GDP.country_names{c_index}, year_start, sum(entity.assets.Value));
+                     sum(entity_base.assets.Value), GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         end
     else
         fprintf('\t\t %s: no data available\n',borders.name{c_name})
+        return
     end
 end
 
-
-if year_start_ori>year_start
-    fprintf('\nStep 2: Entity based on GDP 2010 to entity based on GDP %d\n', year_start_ori)
-    GDP_forecast = [];
-    entity = climada_entity_scaleup_GDP(entity, GDP_forecast, year_start_ori, year_start, centroids, borders, check_figure, check_printplot);
+if exist('year_requested_step_2', 'var') % if year_requested > GDP_latest_year
+    fprintf('\nStep 2: Entity based on GDP %d to entity based on GDP %d\n', GDP_latest_year, year_requested_step_2)
+    GDP_future = [];
+    entity = climada_entity_scaleup_GDP(entity, GDP_future, year_requested_step_2, GDP_latest_year, centroids, borders, check_figure, check_printplot);
 end
 
 if check_figure_entity

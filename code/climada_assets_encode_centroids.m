@@ -1,4 +1,4 @@
-function [assets centroids] = climada_assets_encode_centroids(assets, centroids)
+function [assets, centroids] = climada_assets_encode_centroids(assets, centroids, no_wbar)
 
 % climada assets encode with centroids instead of hazard
 % NAME:
@@ -14,9 +14,10 @@ function [assets centroids] = climada_assets_encode_centroids(assets, centroids)
 %   assets = climada_assets_encode_centroids(assets,centroids)
 % INPUTS:
 %   assets   : a read assets structure, see climada_entity_read
+% OPTIONAL INPUT PARAMETERS:
 %   centroids: either a centroid mat-file (struct) or a centroid set file (.mat with a struct)
 %              > promted for if not given
-% OPTIONAL INPUT PARAMETERS:
+%   no_wbar  : set to 1 to suppress waitbar
 % OUTPUTS:
 %   the encoded assets, means locations mapped to calculation centroids
 %   new field assets.centroid_index added
@@ -30,8 +31,9 @@ global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
 % poor man's version to check arguments
-if ~exist('assets'   , 'var'), return        ;end
-if ~exist('centroids' ,'var'), centroids = []; end
+if ~exist('assets'    ,'var'), return        ;end
+if ~exist('centroids' ,'var'), centroids = [];end
+if ~exist('no_wbar'   ,'var'), no_wbar   = 0 ;end
 
 % PARAMETERS
 %
@@ -60,10 +62,12 @@ end
 % start encoding
 n_centroids = length(assets.Value);
 
-h = waitbar(0,sprintf('Encoding %i records...',n_centroids));
+if ~no_wbar
+    h = waitbar(0,sprintf('Encoding %i records...',n_centroids),'name','Encode assets to centroids');
+end
 
 for centroid_i = 1:n_centroids
-    waitbar(centroid_i/n_centroids,h)
+    if ~no_wbar, waitbar(centroid_i/n_centroids,h), end
     dist_m      = climada_geo_distance(assets.Longitude(centroid_i),assets.Latitude(centroid_i),...
                                        centroids.Longitude, centroids.Latitude);    
     [min_dist,min_dist_index]         = min(dist_m);
@@ -71,7 +75,7 @@ for centroid_i = 1:n_centroids
     if verbose,fprintf('%f/%f --> %f/%f\n',assets.Longitude(centroid_i)       , assets.Latitude(centroid_i) ,...
                                            centroids.Longitude(min_dist_index), centroids.Latitude(min_dist_index));end 
 end % centroid_i
-close(h) % close waitbar
+if ~no_wbar, close(h), end % close waitbar
 
 if isfield(centroids,'comment')
     assets.hazard.comment = centroids.comment;

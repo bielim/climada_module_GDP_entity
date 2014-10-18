@@ -1,4 +1,4 @@
-function entity = climada_entity_scaleup_GDP(entity, GDP_forecast, year_forecast, year_start, centroids, borders, check_figure, check_printplot)
+function entity = climada_entity_scaleup_GDP(entity, GDP_future, year_future, year_start, centroids, borders, check_figure, check_printplot)
 
 % upscale a given entity based on GDP growth between two periods
 % NAME:
@@ -6,17 +6,17 @@ function entity = climada_entity_scaleup_GDP(entity, GDP_forecast, year_forecast
 % PURPOSE:
 %   upscale a given entity based on GDP growth between two periods
 % CALLING SEQUENCE:
-%   entity = climada_entity_scaleup_GDP(entity, GDP_forecast,
-%   year_forecast, year_start, centroids, borders, check_figure, check_printplot)
+%   entity = climada_entity_scaleup_GDP(entity, GDP_future,
+%   year_future, year_start, centroids, borders, check_figure, check_printplot)
 % EXAMPLE:
 %   entity = climada_entity_scaleup_GDP(entity, '', 2030, 2012)
 % INPUTS:
 %   none
 % OPTIONAL INPUTS:
 %   entity       : entity with entity.assets, prompted for it not given
-%   GDP_forecast : GDP data structure based on IMF data, automatically
+%   GDP_future   : GDP data structure based on IMF data, automatically
 %                  loaded from mat-file or newly read from xls if available
-%   year_forecast: e.g. 2030, default 2030
+%   year_future  : e.g. 2030, default 2030
 %   year_start   : e.g. 2012, default 2012
 %   centroids    : centroids structure, with centroids.country_name to link
 %                  GDP data with entity.assets, prompted for if not given
@@ -47,8 +47,8 @@ if ~climada_init_vars,return;end % init/import global variables
 
 % poor man's version to check arguments
 if ~exist('entity'         , 'var'), entity          = [];end
-if ~exist('GDP_forecast'   , 'var'), GDP_forecast    = [];end
-if ~exist('year_forecast'  , 'var'), year_forecast   = 2030; end
+if ~exist('GDP_future'     , 'var'), GDP_future      = [];end
+if ~exist('year_future'    , 'var'), year_future     = 2030; end
 if ~exist('year_start'     , 'var'), year_start      = 2012;end
 if ~exist('centroids'      , 'var'), centroids       = [];end
 if ~exist('borders'        , 'var'), borders         = [];end
@@ -64,17 +64,17 @@ end
 
 
 %% economic development (asset upscaling)
-if isempty(GDP_forecast)
+if isempty(GDP_future)
     %%xlsfilename = [modul_data_dir filesep 'World_GDP_constant_2000_2017.xls'];
     xlsfilename = [modul_data_dir filesep 'World_GDP_constant_2000_2017.xlsx'];
     silent_mode = 1;
     if exist(xlsfilename,'file')
-        GDP_forecast = climada_GDP_read(xlsfilename, 1, 1, silent_mode);
-        save(strrep(xlsfilename,'.xls','.mat'), 'GDP_forecast')
+        GDP_future = climada_GDP_read(xlsfilename, 1, 1, silent_mode);
+        save(strrep(xlsfilename,'.xls','.mat'), 'GDP_future')
     else
         xlsfilename = [];
-        GDP_forecast = climada_GDP_read(xlsfilename, 1, 1, silent_mode);
-        if isempty(GDP_forecast)
+        GDP_future = climada_GDP_read(xlsfilename, 1, 1, silent_mode);
+        if isempty(GDP_future)
             entity = []; fprintf('GDP forecast data not available.\n');
             return
         end
@@ -152,18 +152,18 @@ if check_figure
     subaxis(1,3,1,'SpacingHoriz',0.08,'MarginLeft',0.08,'MarginRight',0.0,'MarginTop',0.1,'MarginBottom',0.4 )
         hold on      
         %ylabel('GDP (USD)')
-        ylabel(GDP_forecast.description)
-        titlestr = sprintf('Forecasted GDP from %d to %d', year_start, year_forecast);
+        ylabel(GDP_future.description)
+        titlestr = sprintf('Forecasted GDP from %d to %d', year_start, year_future);
         title({titlestr ; 'current prices'})
-        xlim([GDP_forecast.year(1) year_forecast+5])
+        xlim([GDP_future.year(1) year_future+5])
         plot([year_start year_start])
-        %xlim([year_start-1 year_forecast+5])
+        %xlim([year_start-1 year_future+5])
      subaxis(2)
         hold on
-        xlim([year_start-1 year_forecast+5])
+        xlim([year_start-1 year_future+5])
         ylabel_ = sprintf('GDP (scaled to %d)',year_start);
         ylabel(ylabel_)
-        titlestr = sprintf('GDP scaled to %d', year_start);
+        titlestr = sprintf('GDP %d is set to 1', year_start);
         title(titlestr)    
     legendstr = {'IMF forecast';'Extrapolation'};
     if length(country_uni)== 1
@@ -189,7 +189,7 @@ for c_i = 1:length(country_uni)
             c_name = find(c_name,1);
         end
         %fprintf('%s\n',borders.name{c_name})
-        c_index = strcmp(borders.name(c_name), GDP_forecast.country_names);
+        c_index = strcmp(borders.name(c_name), GDP_future.country_names);
     else
         c_index = '';
         fprintf('\t\t No country found for "%s"\n', country_uni{c_i})
@@ -201,36 +201,38 @@ for c_i = 1:length(country_uni)
             groupIndex = [];
         end
         %group_str = sprintf('%s, ', borders.name{groupIndex}); group_str(end-1:end) = [];
-        %is_nan = cellfun(@isnan,GDP_forecast.country_names, 'UniformOutput', false);
-        %GDP_forecast.country_names{219}
+        %is_nan = cellfun(@isnan,GDP_future.country_names, 'UniformOutput', false);
+        %GDP_future.country_names{219}
         
-        %isnan(GDP_forecast.country_names)
-        [a ia] = ismember(borders.name(groupIndex), GDP_forecast.country_names);
+        %isnan(GDP_future.country_names)
+        [a ia] = ismember(borders.name(groupIndex), GDP_future.country_names);
         c_index = ia(ia>0);
         if length(c_index)>1
-            names_str = sprintf('%s, ',GDP_forecast.country_names{c_index}); names_str(end-1:end) = [];
+            names_str = sprintf('%s, ',GDP_future.country_names{c_index}); names_str(end-1:end) = [];
             fprintf('\t\t More than one country within group has GDP information (%s)\n',names_str);
             c_index = c_index(1);
-            fprintf('\t\t Take GDP information  from %s\n',GDP_forecast.country_names{c_index});
-            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP_forecast.country_names{c_index}) 
+            fprintf('\t\t Take GDP information  from %s\n',GDP_future.country_names{c_index});
+            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP_future.country_names{c_index}) 
         else
             fprintf('\t\t %s is not in GDP database\n',borders.name{c_name}) 
         end     
     end   
-    if any(c_index) & any(~isnan(GDP_forecast.value(c_index,:))) & any(nonzeros(GDP_forecast.value(c_index,:)))
+    if any(c_index) & any(~isnan(GDP_future.value(c_index,:))) & any(nonzeros(GDP_future.value(c_index,:)))
         % check if requested year is within the forecasted values
-        year_f_index = find(GDP_forecast.year == year_forecast);
-        year_s_index = find(GDP_forecast.year == year_start, 1);
+        year_f_index = find(GDP_future.year == year_future);
+        year_s_index = find(GDP_future.year == year_start, 1);
         if isempty(year_s_index); year_s_index = 1; end
         if ~isempty(year_f_index)
-            GDP_fit = GDP_forecast.value(c_index,year_s_index:year_f_index);
+            GDP_fit = GDP_future.value(c_index,year_s_index:year_f_index);
             scale_up_factor(c_i) = GDP_fit(end)/GDP_fit(1);
         else
             %extrapolate with first order polynom
-            %p_GDP   = polyfit(GDP_forecast.year(year_s_index:end), GDP_forecast.value(c_index,year_s_index:end),1);
-            p_GDP   = polyfit(GDP_forecast.year, GDP_forecast.value(c_index,:),1);
-            GDP_fit = [GDP_forecast.value(c_index,year_s_index:end)...
-                           polyval(p_GDP, GDP_forecast.year(end)+1:year_forecast)];
+            %p_GDP   = polyfit(GDP_future.year(year_s_index:end), GDP_future.value(c_index,year_s_index:end),1);
+            GDP_future_country = GDP_future.value(c_index,:);
+            valid_indx         = ~isnan(GDP_future_country);
+            p_GDP   = polyfit(GDP_future.year(valid_indx), GDP_future_country(valid_indx), 1);
+            GDP_fit = [GDP_future.value(c_index,year_s_index:end)...
+                           polyval(p_GDP, GDP_future.year(end)+1:year_future)];
             % calculate scale up factor for specific forecast year
             scale_up_factor(c_i) = GDP_fit(end)/GDP_fit(1);
         end
@@ -238,19 +240,19 @@ for c_i = 1:length(country_uni)
         if check_figure
             counter = counter+1;
             hold on
-            %h(end+1)= plot(subaxis(1),GDP_forecast.year(year_s_index:end), GDP_forecast.value(c_index,year_s_index:end),'.-','color',color_(counter,:));
-            h(end+1) = plot(subaxis(1),GDP_forecast.year, GDP_forecast.value(c_index,:),'.-','color',color_(counter,:));
-            g        = plot(subaxis(1),GDP_forecast.year(year_s_index):year_forecast, GDP_fit,':','color',color_(counter,:));
-            plot(subaxis(1),year_forecast, GDP_fit(end),'o','color',color_(counter,:))
+            %h(end+1)= plot(subaxis(1),GDP_future.year(year_s_index:end), GDP_future.value(c_index,year_s_index:end),'.-','color',color_(counter,:));
+            h(end+1) = plot(subaxis(1),GDP_future.year, GDP_future.value(c_index,:),'.-','color',color_(counter,:));
+            g        = plot(subaxis(1),GDP_future.year(year_s_index):year_future, GDP_fit,':','color',color_(counter,:));
+            plot(subaxis(1),year_future, GDP_fit(end),'o','color',color_(counter,:))
             
             % plot in percentage, base 2010 or indicated year_start
-            %plot(subaxis(2),GDP_forecast.year(year_s_index:end), GDP_forecast.value(c_index,year_s_index:end)/GDP_forecast.value(c_index,year_s_index), '.-','color',color_(counter,:));
-            plot(subaxis(2),GDP_forecast.year, GDP_forecast.value(c_index,:)/GDP_forecast.value(c_index,year_s_index), '.-','color',color_(counter,:));
-            plot(subaxis(2),GDP_forecast.year(year_s_index):year_forecast, GDP_fit/GDP_fit(1), ':','color',color_(counter,:));
-            plot(subaxis(2),year_forecast, GDP_fit(end)/GDP_fit(1),'o','color',color_(counter,:))
+            %plot(subaxis(2),GDP_future.year(year_s_index:end), GDP_future.value(c_index,year_s_index:end)/GDP_future.value(c_index,year_s_index), '.-','color',color_(counter,:));
+            plot(subaxis(2),GDP_future.year, GDP_future.value(c_index,:)/GDP_future.value(c_index,year_s_index), '.-','color',color_(counter,:));
+            plot(subaxis(2),GDP_future.year(year_s_index):year_future, GDP_fit/GDP_fit(1), ':','color',color_(counter,:));
+            plot(subaxis(2),year_future, GDP_fit(end)/GDP_fit(1),'o','color',color_(counter,:))
             plot(subaxis(2),year_start, GDP_fit(1)/GDP_fit(1),'x','color',color_(counter,:))
             
-            text(year_forecast+1.5, GDP_fit(end)/GDP_fit(1), [num2str(scale_up_factor(c_i),'%2.2f')],'VerticalAlignment','cap','HorizontalAlignment','left',...
+            text(year_future+1.5, GDP_fit(end)/GDP_fit(1), [num2str(scale_up_factor(c_i),'%2.2f')],'VerticalAlignment','cap','HorizontalAlignment','left',...
                  'color',color_(counter,:),'fontsize',7,'Parent', subaxis(2))
             %legendstr{end+1} = borders.name{c_name};
             legendstr{end+1} = [num2str(scale_up_factor(c_i),'%2.2f') ': ' borders.name{c_name}];
@@ -265,7 +267,7 @@ if check_figure;
     if isempty(year_f_index); ylim([0.9 max(scale_up_factor)*1.1]); end
     if check_printplot
         token      = strrep(strtok(entity.assets.filename,','),' ','');
-        printname  = sprintf('Scale_up_%s_%d_%d.pdf', token, year_start, year_forecast);
+        printname  = sprintf('Scale_up_%s_%d_%d.pdf', token, year_start, year_future);
         foldername = [filesep 'results' filesep printname];
         print(fig,'-dpdf',[climada_global.data_dir foldername])   
         cprintf([255 127 36 ]/255,'\t\t saved 1 FIGURE in folder ..%s \n', foldername);
@@ -293,10 +295,11 @@ for c_i = 1:length(country_uni)
         fprintf('No centroids within %s\n',country_uni{c_i})
     end
 end
-entity.assets.hazard.comment = [entity.assets.hazard.comment ', scaled up for ' int2str(year_forecast)];
+entity.assets.hazard.comment = [entity.assets.hazard.comment ', scaled up for ' int2str(year_future)];
+entity.assets.reference_year = year_future;
 token = strtok(entity.assets.filename,',');
-fprintf('\t\t Entity assets "%s" scaled from %d to %d with average scale up factor %2.2f\n', token, year_start, year_forecast, mean(scale_up_factor))
-fprintf('\t\t Entity assets sum is %2.4g USD \n', sum(entity.assets.Value))
+fprintf('\t\t Entity assets "%s" scaled from %d to %d with average scale up factor %2.2f\n', token, year_start, year_future, mean(scale_up_factor))
+fprintf('\t\t Entity assets sum is %2.4g USD \n\n', sum(entity.assets.Value))
 
 
 %%

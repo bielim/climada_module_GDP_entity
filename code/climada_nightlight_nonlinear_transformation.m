@@ -40,13 +40,13 @@ modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
 if isempty(pp), 
     try
-        %load([climada_global.additional_dir{dir_index} filesep 'night_light_vs_prtf_assets_poly_forth_order'])
+        %load([climada_global.modules_dir{dir_index} filesep 'night_light_vs_prtf_assets_poly_forth_order'])
         %pp = pp{4}; %all regions combined
         
-        %%load([climada_global.additional_dir{dir_index} filesep 'night_light_vs_prtf_assets_poly_second_order'])
+        %%load([climada_global.modules_dir{dir_index} filesep 'night_light_vs_prtf_assets_poly_second_order'])
         %%pp = pp{3}; %new orleans
         
-        %load([climada_global.additional_dir{dir_index} filesep 'night_light_vs_prtf_assets_poly_second_order_without_y'])
+        %load([climada_global.modules_dir{dir_index} filesep 'night_light_vs_prtf_assets_poly_second_order_without_y'])
         %pp = pp{4}; %all regions combined
         
         % second order polynom based on 28 km resolution of assets (US

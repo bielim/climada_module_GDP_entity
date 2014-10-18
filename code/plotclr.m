@@ -80,6 +80,9 @@ else
     clrstep = (mav-miv+1)/(size(map,1)-1);
 end
 
+if clrstep == 0
+    clrstep = 10^-2;
+end
 
 
 % Plot the points

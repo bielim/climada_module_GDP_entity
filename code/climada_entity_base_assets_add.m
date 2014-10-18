@@ -1,4 +1,4 @@
-function entity_base = climada_entity_base_assets_add(values_distributed, centroids, country_name_str, matrix_hollowout,  X, Y, hollow_name)
+function entity_base = climada_entity_base_assets_add(values_distributed, centroids, country_name_str, matrix_hollowout,  X, Y, hollow_name, no_wbar)
 
 % climada add assets to entity base structure, from values_distributed 
 % NAME:
@@ -24,6 +24,8 @@ function entity_base = climada_entity_base_assets_add(values_distributed, centro
 %                           masking 1 for on land, and zero for sea, 2 (max value) for buffer
 %   X                     : helper matrix containing Longitude information for plotting matrix
 %   Y                     : helper matrix containing Latitude information for plotting matrix
+% OPTIONAL INPUT PARAMETERS:
+%   no_wbar               : set to 1 to suppress waitbar
 % OUTPUTS:
 %   entity_base           : entity with assets from values_distributed. 
 %                           Values sum up to 100, or if only coastal areas 
@@ -38,9 +40,10 @@ if ~climada_init_vars,return;end % init/import global variables
 
 entity = [];
 % poor man's version to check arguments
-if ~exist('values_distributed', 'var'), return        ;end
-if ~exist('centroids'         , 'var'), return        ;end
+if ~exist('values_distributed', 'var'), fprintf('No values given. Unable to proceed.\n')   , return ;end
+if ~exist('centroids'         , 'var'), fprintf('No centroids given. Unable to proceed.\n'), return ;end
 if ~exist('hollow_name'       , 'var'), hollow_name = [];end
+if ~exist('no_wbar'           , 'var'), no_wbar     = 0 ;end
 
 % PARAMETERS
 
@@ -80,7 +83,12 @@ assets.Value            = full(values_distributed.values(mask_index))';
 assets.Deductible       = zeros(1,length(assets.Longitude));
 assets.Cover            = full(values_distributed.values(mask_index))';
 assets.DamageFunID      = ones(1,length(assets.Longitude));
-assets.Value_today       = full(values_distributed.values(mask_index))'; % _2012 replaced by _today
+assets.Value_today      = full(values_distributed.values(mask_index))'; % _2012 replaced by _today
+assets.reference_year   = [];
+if sum(assets.Value)<100.5 & sum(assets.Value)>99.5
+    assets.reference_year = 100;
+end
+
 
 if ~any(assets.Value)%all zeros
     fprintf('\t\t No values within assets for %s\n', country_name_str)
@@ -90,7 +98,7 @@ end
 
 %% encode assets
 fprintf('\t c) Encode assets to centroids\n')
-[entity_base.assets centroids] = climada_assets_encode_centroids(assets, centroids);
+[entity_base.assets, centroids] = climada_assets_encode_centroids(assets, centroids, no_wbar);
 
 
 

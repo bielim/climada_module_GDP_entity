@@ -17,7 +17,8 @@ function border_mask = climada_polygon2raster(borders, raster_size, save_on)
 % OPTIONAL INPUT PARAMETERS:
 %   borders     : structure (fields with polygons and names) from climada plot
 %                 world map
-%   raster_size : size of requested matrix (e.g. [336 864], 50km resolution)
+%   raster_size : size of requested matrix (e.g. [336 864], 50km
+%   resolution); [1680 4320], 10km; [168 432], 100km
 % OUTPUTS:
 %  border_mask  : structure with following fields
 %  .mask        : 243 matrices (for each country) masking 1 for
@@ -39,12 +40,16 @@ if ~exist('borders'    , 'var'), borders     = []; end
 if ~exist('raster_size', 'var'), raster_size = []; end
 if ~exist('save_on'    , 'var'), save_on     = []; end
 
+% set modul data directory
+modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
+
+
 % load the borders file, if not given
 if isempty(borders)
-    border_file   = strrep(climada_global.map_border_file, '.gen','.mat');
-    load(border_file)
-    fprintf('climada world border file loaded.\n')
+    borders = climada_load_world_borders(borders);
 end
+if isempty(borders), return, end
+
 
 if isempty(raster_size)
     fprintf('Please indicate size of requested raster\n\n')
@@ -116,7 +121,7 @@ resolution_km = round(climada_geo_distance(0,0,resolution_x,0)/1000);
 resolution_km = ceil(resolution_km/5)*5;
 
 if save_on
-    filename = [climada_global.additional_dir filesep 'data' filesep 'globalGDP' filesep 'border_mask_' int2str(resolution_km) 'km.mat'];
+    filename = [modul_data_dir filesep 'border_mask_' int2str(resolution_km) 'km.mat'];
     save(filename,'border_mask')
     fprintf('border_mask structure saved in %s\n',filename)
 end

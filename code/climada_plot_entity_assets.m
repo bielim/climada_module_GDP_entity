@@ -56,9 +56,17 @@ markersize(markersize<2) = 2;
 
 %% create figure
 fig = climada_figuresize(height,height*scale2+0.15);
-name_str = sprintf('Entity %s', country_name{1});
+if ~isfield(entity.assets,'reference_year')
+    entity.assets.reference_year = '';
+end
+name_str = sprintf('Entity %s, Reference year %d', country_name{1}, entity.assets.reference_year);
 set(fig,'Name',name_str)
+
+plot(entity.assets.Longitude, entity.assets.Latitude,'.', 'color', [238 224 229]/255, 'MarkerSize', 0.05);
+hold on
+
 % colormap(flipud(hot))
+% if length()
 cbar = plotclr(entity.assets.Longitude, entity.assets.Latitude, entity.assets.Value,'s',markersize,1,...
                [],[],[],[],1);             
 set(get(cbar,'ylabel'),'String', 'value per pixel (exponential scale)' ,'fontsize',12);
@@ -70,9 +78,11 @@ axis equal
 axis(ax_lim)
 
 if sum(entity.assets.Value)<=100.5
-    title_str = sprintf('Entity %s (sum of all assets: %10.1f)', entity.assets.hazard.comment, sum(entity.assets.Value));
+    %title_str = sprintf('Entity %s (sum of all assets: %10.1f)', entity.assets.hazard.comment, sum(entity.assets.Value));
+    title_str = sprintf('Entity: sum of all assets: %10.1f, Base entity', sum(entity.assets.Value));
 else %if sum(entity.assets.Value) > 10000
-    title_str = sprintf('Entity %s (sum of all assets: %2.4g USD)', entity.assets.hazard.comment, sum(entity.assets.Value));
+    %title_str = sprintf('Entity %s (sum of all assets: %2.4g USD)', entity.assets.hazard.comment, sum(entity.assets.Value));
+    title_str = sprintf('Entity: sum of all assets: %2.4g USD, Year %d', sum(entity.assets.Value), entity.assets.reference_year);
 end
 title(title_str)
 

@@ -1,4 +1,4 @@
-function [values_distributed pp] = climada_night_light_to_country(country_name, pp, night_light,...
+function [values_distributed, pp] = climada_night_light_to_country(country_name, pp, night_light,...
                                                        borders, border_mask, check_figure, check_printplot, save_on, silent_mode)
 
 % geographically distribute values within one country according to 
@@ -57,11 +57,12 @@ if ~exist('save_on'            , 'var'), save_on             = []; end
 if ~exist('silent_mode'        , 'var'), silent_mode         = 0 ; end
 
 % set modul data directory
-modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
+modul_data_dir     = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
+values_distributed = [];
+pp                 = [];
 
 if isempty(country_name)
     fprintf('No country chosen. Unable to proceed.\n')
-    values_distributed = []; pp = [];
     return
 end
 
@@ -84,7 +85,7 @@ if isempty(night_light)
         end
     end
 end
-values                = night_light.values;
+values = night_light.values;
 % Set night lights nan values to zero and create sparse matrix
 % values(isnan(values)) = 0;
 
@@ -121,66 +122,76 @@ input_resolution_km = ceil(input_resolution_km/10)*10;
   
 
 %% load border_mask file
+
 if isempty(border_mask)
-    try
-        load ([modul_data_dir filesep 'border_mask_10km'])  
-    catch
-        cprintf('r','\tborder mask not available in required resolution for night light data (%dkm)~\n',input_resolution_km)
-        return
-    end
+    border_mask = climada_load_border_mask;
 end
+if isempty(border_mask), return, end
+
+
 %check resolution of border_mask file matches night light values
 if any(size(border_mask.mask{1}) ~= size(night_light.values))
     asset_resolution_km = climada_geo_distance(0,0,border_mask.resolution_x,0)/1000;
     asset_resolution_km = ceil(asset_resolution_km/10)*10;
-    cprintf('r','\tnight light resolution (~%dkm) does not match border mask resolution (~%dkm)\n',input_resolution_km, asset_resolution_km)
+    cprintf([1,0.5,0],'\tNight light resolution (~%dkm) does not match border mask resolution (~%dkm)\n',input_resolution_km, asset_resolution_km)
     return
 else
     asset_resolution_km = input_resolution_km;
 end
 
+
 % load the borders file, if not given
 if isempty(borders)
-    border_file   = [climada_global.system_dir filesep 'world_50m.mat'];
-    if exist(border_file,'file')
-        load(border_file)
-    else
-        fprintf('World border file not available. Unable to proceed.\n')
-        return
-        
-    end
+    borders = climada_load_world_borders;
 end
+if isempty(borders), return, end
+
 
   
 %% create distributed matrix
-% check for groups
-c_borders_index = strcmp(country_name, borders.name);
-if borders.groupID(c_borders_index)>0
-    group_index = find(borders.groupID == borders.groupID(c_borders_index));
-else
-    group_index = find(c_borders_index);
-end
-if ~isempty(group_index)
-    
-    country_name_str = sprintf('%s, ',borders.name{group_index}); 
-    country_name_str(end-1:end) = [];
-    fprintf('\t\t Distribute values according to night lights within %s on a %d km resolution\n',country_name_str, asset_resolution_km)
+country_name = climada_check_country_name(country_name);
+if isempty(country_name), return, end
 
-    % if more than one country, put all countries together in
-    % one country_mask
-    country_mask = zeros(size(border_mask.mask{1}));
-    for group_index_i = 1:length(group_index)
-        country_mask = country_mask + border_mask.mask{group_index(group_index_i)};
-    end
-    country_mask(country_mask>1) = 1;
+% create country mask for selected country
+c_indx       = strcmp(country_name, borders.name);
+country_mask = border_mask.mask{c_indx};
+values_dist  = values .* country_mask;
+values_dist  = values_dist / sum(values_dist(:)) * 100;      
 
-    values_dist = zeros(size(country_mask));
-    values_dist(logical(country_mask)) =  values(logical(country_mask));
-    values_dist =  values_dist / sum(values_dist(:)) * 100;          
-else
-    fprintf('\t\t No country mask for %s \n', country_name)
-    return
-end
+% values_dist  = zeros(size(country_mask));
+% values_dist(logical(country_mask)) =  values(logical(country_mask));
+% values_dist =  values_dist / sum(values_dist(:)) * 100;         
+
+
+% % check for groups
+% c_borders_index = strcmp(country_name, borders.name);
+% if borders.groupID(c_borders_index)>0
+%     group_index = find(borders.groupID == borders.groupID(c_borders_index));
+% else
+%     group_index = find(c_borders_index);
+% end
+% if ~isempty(group_index)
+%     
+%     country_name_str = sprintf('%s, ',borders.name{group_index}); 
+%     country_name_str(end-1:end) = [];
+%     fprintf('\t\t Distribute values according to night lights within %s on a %d km resolution\n',country_name_str, asset_resolution_km)
+% 
+%     % if more than one country, put all countries together in
+%     % one country_mask
+%     country_mask = zeros(size(border_mask.mask{1}));
+%     for group_index_i = 1:length(group_index)
+%         country_mask = country_mask + border_mask.mask{group_index(group_index_i)};
+%     end
+%     country_mask(country_mask>1) = 1;
+% 
+%     values_dist = zeros(size(country_mask));
+%     values_dist(logical(country_mask)) =  values(logical(country_mask));
+%     values_dist =  values_dist / sum(values_dist(:)) * 100;          
+% else
+%     fprintf('\t\t No country mask for %s. Unable to proceed.\n', country_name)
+%     return
+% end
+
 
 values_distributed.values       = sparse(values_dist);
 values_distributed.lon_range    = x_range;

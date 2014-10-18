@@ -72,6 +72,12 @@ else
           jet(no_colors);...
           [205 193 197 ]/255]);
 end
+
+if min(centroids.onLand) > 0
+    indx = find(centroids.onLand, 1, 'last');
+    centroids.onLand(indx) = 0;
+end
+
 cbar = plotclr(centroids.Longitude, centroids.Latitude, centroids.onLand, '+',markersize, 1, [],[],cmap);
 colormap(cmap)
 caxis([0 size(cmap,1)])
@@ -89,7 +95,6 @@ else
 end 
 set(cbar,'YTick',0.5:1:size(cmap,1)-0.5,'yticklabel',cbar_label,'fontsize',12)   
 title([strrep(printname,'_',' ') ': centroids on land, within buffer and grid']) 
-
 
 if check_printplot
     if strcmp(printname,country_name) %local GUI
