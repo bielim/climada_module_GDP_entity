@@ -68,10 +68,10 @@ resolution_y = sum(abs(y_range))/raster_x;
                         y_range(1)+resolution_y/2: resolution_y: y_range(2)-resolution_y/2);
 
 % waitbar
-h         = waitbar(0);
+h = waitbar(0);
 
 % go through each country and their polygons
-for country_i = 1:10%length(borders.poly)
+for country_i = 1:length(borders.poly)
     % create empty sparse matrix for country masks
     mask{country_i} = sparse(raster_x, raster_y);
         
@@ -96,6 +96,13 @@ for country_i = 1:10%length(borders.poly)
             end  
         end
     end %island_i
+    if ~any(mask{country_i}) %island or entire country too small 
+        lon = mean(borders.poly{country_i}.lon{island_i});
+        lat = mean(borders.poly{country_i}.lat{island_i});
+        [~,indx] = min(abs(X(1,:)-lon));
+        [~,indy] = min(abs(Y(:,1)-lat));
+        mask{country_i}(indy,indx) = 1;    
+    end
 end %country_i
 
 close(h) % close waitbar

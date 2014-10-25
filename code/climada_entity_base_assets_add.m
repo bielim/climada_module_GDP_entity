@@ -33,6 +33,7 @@ function entity_base = climada_entity_base_assets_add(values_distributed, centro
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20140205
 % david.bresch@gmail.com, 20140216, _2012 replaced by _today
+% david.bresch@gmail.com, 20140216, assets.comment introduced
 %-
 
 global climada_global
@@ -69,7 +70,8 @@ entity_base = entity; clear entity;
 %% take assets from distributed values matrix
 fprintf('\t b) Take assets from distributed values matrix\n')
 assets                  = [];
-assets.filename         = [country_name_str ', ' values_distributed.comment hollow_name];
+assets.comment          = [country_name_str ', ' values_distributed.comment hollow_name];
+assets.filename         = country_name_str; % since we did not read from Excel
 
 % mask_index              = logical(country_mask_resolution.values);
 % check for buffer value

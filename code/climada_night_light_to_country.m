@@ -133,7 +133,7 @@ if isempty(border_mask), return, end
 if any(size(border_mask.mask{1}) ~= size(night_light.values))
     asset_resolution_km = climada_geo_distance(0,0,border_mask.resolution_x,0)/1000;
     asset_resolution_km = ceil(asset_resolution_km/10)*10;
-    cprintf([1,0.5,0],'\tNight light resolution (~%dkm) does not match border mask resolution (~%dkm)\n',input_resolution_km, asset_resolution_km)
+    cprintf([1,0.5,0],'\t Night light resolution (~%dkm) does not match border mask resolution (~%dkm)\n',input_resolution_km, asset_resolution_km)
     return
 else
     asset_resolution_km = input_resolution_km;
@@ -155,7 +155,15 @@ if isempty(country_name), return, end
 % create country mask for selected country
 c_indx       = strcmp(country_name, borders.name);
 country_mask = border_mask.mask{c_indx};
+if ~any(country_mask)
+    cprintf([1,0.5,0],'\t %s is too small and does not exist as a mask. Unable to proceed.\n', country_name)
+end
 values_dist  = values .* country_mask;
+if ~any(values_dist)
+    cprintf([1,0.5,0],'\t No light data available for %s. Assume uniform distribution.\n', country_name)
+    values_dist  = country_mask;
+    any(country_mask)
+end
 values_dist  = values_dist / sum(values_dist(:)) * 100;      
 
 % values_dist  = zeros(size(country_mask));

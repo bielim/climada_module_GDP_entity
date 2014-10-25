@@ -211,7 +211,9 @@ for c_i = 1:length(country_uni)
         % factor = "GDP for a given country and year" / 100
         GDP_val        = GDP.value(c_index, year_s_index);
         if isnan(GDP_val)
-            fprintf('\t\t No GDP value for year %d available. Unable to proceed.\n', year_requested)
+            fprintf('\t\t No GDP value for year %d available. Stick with base entity where all assets sum up to 100.\n', year_requested)
+            entity = entity_base;
+            entity.assets.reference_year = 100;
             return
         end
         scaleup_factor = GDP_val / 100;
@@ -227,15 +229,21 @@ for c_i = 1:length(country_uni)
                      sum(entity_base.assets.Value), GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         end
     else
-        fprintf('\t\t %s: no data available\n',borders.name{c_name})
-        return
+        fprintf('\t\t %s: no GDP data available. Stick with base entity where all assets sum up to 100.\n',borders.name{c_name})
+        entity = entity_base;
+        entity.assets.reference_year = 100;
+        %return
     end
 end
 
 if exist('year_requested_step_2', 'var') % if year_requested > GDP_latest_year
     fprintf('\nStep 2: Entity based on GDP %d to entity based on GDP %d\n', GDP_latest_year, year_requested_step_2)
-    GDP_future = [];
-    entity = climada_entity_scaleup_GDP(entity, GDP_future, year_requested_step_2, GDP_latest_year, centroids, borders, check_figure, check_printplot);
+    if entity.assets.reference_year ~= 100
+        GDP_future = [];
+        entity = climada_entity_scaleup_GDP(entity, GDP_future, year_requested_step_2, GDP_latest_year, centroids, borders, check_figure, check_printplot);
+    else
+        fprintf('\t\t Stick with base entity where all assets sum up to 100.\n')
+    end
 end
 
 if check_figure_entity

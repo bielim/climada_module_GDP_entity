@@ -31,9 +31,10 @@ function entity = climada_entity_scaleup_factor(entity, factor_)
 % MODIFICATION HISTORY:
 % Lea Mueller, 20130412
 % david.bresch@gmail.com, 20140216, _2012 replaced by _today
+% david.bresch@gmail.com, 20141024, entity.assets.comment introduced
 %-
 
-global climada_global
+%global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
 % poor man's version to check arguments
@@ -50,7 +51,9 @@ if isempty(factor_)
 end
 
 % scale up entity with given factor
-entity.assets.filename = sprintf('entity scaled with factor %2.3f, %s' , factor_, entity.assets.filename);
+if ~isfield(entity.assets,'comment'),entity.assets.comment='';end
+entity.assets.comment = [entity.assets.comment sprintf(', entity scaled with factor %2.3f',factor_)]; % was entity.assets.filename= before
+entity.assets.scaleup_factor  = factor_ ; % new, to have the factor at hand
 entity.assets.Value           = factor_ * entity.assets.Value ;
 entity.assets.Deductible      = factor_ * entity.assets.Deductible;
 entity.assets.Cover           = factor_ * entity.assets.Cover;

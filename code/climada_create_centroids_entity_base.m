@@ -166,9 +166,8 @@ save_on     = 0;
 
 [values_distributed, pp] = climada_night_light_to_country(country_name, pp, night_light,...
                                                          borders, border_mask, 0, check_printplot, save_on, silent_mode);
-if isempty(values_distributed); centroids = []; entity = []; return; end
+if isempty(values_distributed); return; end
 if ~any(values_distributed.values)
-    centroids = []; entity = [];
     cprintf('r','\t\t No light data available for %s. Unable to proceed.\n', country_name_str)
     return
 end
