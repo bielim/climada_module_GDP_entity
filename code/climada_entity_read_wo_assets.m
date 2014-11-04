@@ -4,11 +4,11 @@ function entity = climada_entity_read_wo_assets(entity_filename)
 % NAME:
 %   climada_entity_read_wo_assets
 % PURPOSE:
-%   read the Excel file without assets, but with damagefunctions, measures 
+%   read the Excel file without assets, but with damagefunctions, measures
 %   etc. without encoding (climada_assets_encode)
 %   The code invokes climada_spreadsheet_read to really read the data,
 %   which implements .xls files
-%   For .xls, the sheet names are dynamically checked, 
+%   For .xls, the sheet names are dynamically checked,
 %   'assets','damagefunctions','measures' and 'discount' need to exist.
 % CALLING SEQUENCE:
 %   entity = climada_entity_read_wo_assets(entity_filename, assets_off)
@@ -101,11 +101,16 @@ try
         if isfield(entity.damagefunctions,'VulnCurveID'),entity.damagefunctions.DamageFunID=entity.damagefunctions.VulnCurveID;entity.damagefunctions=rmfield(entity.damagefunctions,'VulnCurveID');end
         
         % check consistency (a damagefunction definition for each DamageFunID)
-        asset_DamageFunIDs=unique(entity.assets.DamageFunID);
-        damagefunctions_DamageFunIDs=unique(entity.damagefunctions.DamageFunID);
-        tf=ismember(asset_DamageFunIDs,damagefunctions_DamageFunIDs);
-        if length(find(tf))<length(tf)
-            fprintf('WARN: DamageFunIDs in assets might not all be defined in damagefunctions tab\n')
+        if ~isempty(entity.assets)
+            asset_DamageFunIDs=unique(entity.assets.DamageFunID);
+            damagefunctions_DamageFunIDs=unique(entity.damagefunctions.DamageFunID);
+            tf=ismember(asset_DamageFunIDs,damagefunctions_DamageFunIDs);
+            if length(find(tf))<length(tf)
+                fprintf('WARN: DamageFunIDs in assets might not all be defined in damagefunctions tab\n')
+            end
+        else
+            fprintf('NOTE: assets empty, DamageFunIDs not checked for consistency\n')
+            
         end
     end
     
@@ -114,23 +119,23 @@ catch ME
 end
 
 %try
-    % try to read also the measures (if exists)
-    % -----------------------------
-    for sheet_i=1:length(sheet_names) % loop over tab (sheet) names
-        if strcmp(sheet_names{sheet_i},'measures')
-            %%fprintf('NOTE: also reading measures tab\n');
-            measures        = climada_spreadsheet_read('no',entity_filename,'measures',1);
-            entity.measures = climada_measures_encode(measures);
-            
-            % check for OLD naming convention, vuln_MDD_impact_a -> MDD_impact_a
-            if isfield(entity.measures,'vuln_MDD_impact_a'),entity.measures.MDD_impact_a=entity.measures.vuln_MDD_impact_a;entity.measures=rmfield(entity.measures,'vuln_MDD_impact_a');end
-            if isfield(entity.measures,'vuln_MDD_impact_b'),entity.measures.MDD_impact_b=entity.measures.vuln_MDD_impact_b;entity.measures=rmfield(entity.measures,'vuln_MDD_impact_b');end
-            if isfield(entity.measures,'vuln_PAA_impact_a'),entity.measures.PAA_impact_a=entity.measures.vuln_PAA_impact_a;entity.measures=rmfield(entity.measures,'vuln_PAA_impact_a');end
-            if isfield(entity.measures,'vuln_PAA_impact_b'),entity.measures.PAA_impact_b=entity.measures.vuln_PAA_impact_b;entity.measures=rmfield(entity.measures,'vuln_PAA_impact_b');end
-            if isfield(entity.measures,'vuln_map'),entity.measures.damagefunctions_map=entity.measures.vuln_map;entity.measures=rmfield(entity.measures,'vuln_map');end
-            
-        end
-    end % sheet_i
+% try to read also the measures (if exists)
+% -----------------------------
+for sheet_i=1:length(sheet_names) % loop over tab (sheet) names
+    if strcmp(sheet_names{sheet_i},'measures')
+        %%fprintf('NOTE: also reading measures tab\n');
+        measures        = climada_spreadsheet_read('no',entity_filename,'measures',1);
+        entity.measures = climada_measures_encode(measures);
+        
+        % check for OLD naming convention, vuln_MDD_impact_a -> MDD_impact_a
+        if isfield(entity.measures,'vuln_MDD_impact_a'),entity.measures.MDD_impact_a=entity.measures.vuln_MDD_impact_a;entity.measures=rmfield(entity.measures,'vuln_MDD_impact_a');end
+        if isfield(entity.measures,'vuln_MDD_impact_b'),entity.measures.MDD_impact_b=entity.measures.vuln_MDD_impact_b;entity.measures=rmfield(entity.measures,'vuln_MDD_impact_b');end
+        if isfield(entity.measures,'vuln_PAA_impact_a'),entity.measures.PAA_impact_a=entity.measures.vuln_PAA_impact_a;entity.measures=rmfield(entity.measures,'vuln_PAA_impact_a');end
+        if isfield(entity.measures,'vuln_PAA_impact_b'),entity.measures.PAA_impact_b=entity.measures.vuln_PAA_impact_b;entity.measures=rmfield(entity.measures,'vuln_PAA_impact_b');end
+        if isfield(entity.measures,'vuln_map'),entity.measures.damagefunctions_map=entity.measures.vuln_map;entity.measures=rmfield(entity.measures,'vuln_map');end
+        
+    end
+end % sheet_i
 % catch ME
 %     fprintf('WARN: no measures data read, %s\n',ME.message)
 % end

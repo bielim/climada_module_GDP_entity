@@ -1,6 +1,5 @@
 function entity_base = climada_entity_base_assets_add(values_distributed, centroids, country_name_str, matrix_hollowout,  X, Y, hollow_name, no_wbar)
-
-% climada add assets to entity base structure, from values_distributed 
+% climada add assets to entity base structure, from values_distributed
 % NAME:
 %   climada_entity_base_assets_add
 % PURPOSE:
@@ -20,23 +19,24 @@ function entity_base = climada_entity_base_assets_add(values_distributed, centro
 %         .resolution_y   : resolution in y-direction
 %   centroids             : a centroid mat-file (struct)
 %   country_name_str      : country name as string format
-%   matrix_hollowout      : coastal area, bufferzone and hollowed out matrix, 
+%   matrix_hollowout      : coastal area, bufferzone and hollowed out matrix,
 %                           masking 1 for on land, and zero for sea, 2 (max value) for buffer
 %   X                     : helper matrix containing Longitude information for plotting matrix
 %   Y                     : helper matrix containing Latitude information for plotting matrix
 % OPTIONAL INPUT PARAMETERS:
 %   no_wbar               : set to 1 to suppress waitbar
 % OUTPUTS:
-%   entity_base           : entity with assets from values_distributed. 
-%                           Values sum up to 100, or if only coastal areas 
+%   entity_base           : entity with assets from values_distributed.
+%                           Values sum up to 100, or if only coastal areas
 %                           are selected, to less than 100.
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20140205
 % david.bresch@gmail.com, 20140216, _2012 replaced by _today
 % david.bresch@gmail.com, 20140216, assets.comment introduced
+% david.bresch@gmail.com, 20141104, climada_check_matfile used
 %-
 
-global climada_global
+%global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
 entity = [];
@@ -50,24 +50,27 @@ if ~exist('no_wbar'           , 'var'), no_wbar     = 0 ;end
 
 % set modul data directory
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
+%
+% define the file with an empty entity (used as 'template')
+entity_global_without_assets_file=[modul_data_dir filesep 'entity_global_without_assets.xls'];
 
 
-%% try to load wildcard entity (wildcard entity) without assets as mat-file
-try 
-    load([modul_data_dir filesep 'entity_global_without_assets.mat'])
-    fprintf('\t a) Load wildcard entity without assets (damagefunctions, measures, discount)\n')
-catch err
-    % read entity without assets
+if ~climada_check_matfile(entity_global_without_assets_file)
     fprintf('\t a) Read from excel, entity without assets (damagefunctions, measures, discount) ...\n\t    ')
-    entity_filename = [modul_data_dir filesep 'entity_global_without_assets.xls'];
-    entity          = climada_entity_read_wo_assets(entity_filename);
+    entity = climada_entity_read_wo_assets(entity_global_without_assets_file);
+else
+    [fP,fN]=fileparts(entity_global_without_assets_file);
+    mat_filename=[fP filesep fN '.mat'];
+    fprintf('\t a) Load wildcard entity without assets (damagefunctions, measures, discount)\n')
+    load(mat_filename);
 end
+
 
 % rename to entity_base
 entity_base = entity; clear entity;
 
 
-%% take assets from distributed values matrix
+% take assets from distributed values matrix
 fprintf('\t b) Take assets from distributed values matrix\n')
 assets                  = [];
 assets.comment          = [country_name_str ', ' values_distributed.comment hollow_name];
@@ -87,7 +90,7 @@ assets.Cover            = full(values_distributed.values(mask_index))';
 assets.DamageFunID      = ones(1,length(assets.Longitude));
 assets.Value_today      = full(values_distributed.values(mask_index))'; % _2012 replaced by _today
 assets.reference_year   = [];
-if sum(assets.Value)<100.5 & sum(assets.Value)>99.5
+if sum(assets.Value)<100.5 && sum(assets.Value)>99.5
     assets.reference_year = 100;
 end
 
@@ -98,12 +101,8 @@ if ~any(assets.Value)%all zeros
     return
 end
 
-%% encode assets
+% encode assets
 fprintf('\t c) Encode assets to centroids\n')
-[entity_base.assets, centroids] = climada_assets_encode_centroids(assets, centroids, no_wbar);
-
-
+entity_base.assets = climada_assets_encode_centroids(assets, centroids, no_wbar);
 
 return
-
-
