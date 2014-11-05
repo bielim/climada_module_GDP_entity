@@ -58,19 +58,19 @@ if ~exist('check_printplot', 'var'), check_printplot = [];end
 % set modul data directory
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
+xlsfilename = [modul_data_dir filesep 'World_GDP_constant_2000_2017.xlsx'];
+
 if isempty(entity)
     entity = climada_entity_load;
 end
 
 
-%% economic development (asset upscaling)
+% economic development (asset upscaling)
 if isempty(GDP_future)
-    %%xlsfilename = [modul_data_dir filesep 'World_GDP_constant_2000_2017.xls'];
-    xlsfilename = [modul_data_dir filesep 'World_GDP_constant_2000_2017.xlsx'];
     silent_mode = 1;
     if exist(xlsfilename,'file')
         GDP_future = climada_GDP_read(xlsfilename, 1, 1, silent_mode);
-        save(strrep(xlsfilename,'.xls','.mat'), 'GDP_future')
+        %save(strrep(xlsfilename,'.xls','.mat'), 'GDP_future')
     else
         xlsfilename = [];
         GDP_future = climada_GDP_read(xlsfilename, 1, 1, silent_mode);
@@ -100,7 +100,7 @@ if ~isstruct(centroids)
 end
 
 % prompt for borders if not given
-if isempty(borders) 
+if isempty(borders)
     if isfield(climada_global,'map_border_file')
         map_border_file = strrep(climada_global.map_border_file,'.gen','.mat');
     else
@@ -108,11 +108,11 @@ if isempty(borders)
         return
     end
     try
-       load(map_border_file)
+        load(map_border_file)
     catch err
         fprintf('\t\t create and save world borders as mat-file...')
         climada_plot_world_borders
-        close   
+        close
         fprintf('done\n')
         load(map_border_file)
     end
@@ -129,7 +129,7 @@ if all(ismember(uni_index,centroids.centroid_ID))
 else
     fprintf('\t\t Not all assets within entities match with given centroids!\n\t\t Can"t proceed\n')
     entity = [];
-    return    
+    return
 end
 
 
@@ -144,27 +144,27 @@ if length(country_uni) == 1 & isempty(country_uni{1})
     return
 end
 
-%% initialize GDP extrapolation figure
+% initialize GDP extrapolation figure
 if check_figure
     %fig = climada_figuresize(0.4,0.8);
     fig = climada_figuresize(0.4,0.8);
     set(fig,'Name','Entity scale up')
     subaxis(1,3,1,'SpacingHoriz',0.08,'MarginLeft',0.08,'MarginRight',0.0,'MarginTop',0.1,'MarginBottom',0.4 )
-        hold on      
-        %ylabel('GDP (USD)')
-        ylabel(GDP_future.description)
-        titlestr = sprintf('Forecasted GDP from %d to %d', year_start, year_future);
-        title({titlestr ; 'current prices'})
-        xlim([GDP_future.year(1) year_future+5])
-        plot([year_start year_start])
-        %xlim([year_start-1 year_future+5])
-     subaxis(2)
-        hold on
-        xlim([year_start-1 year_future+5])
-        ylabel_ = sprintf('GDP (scaled to %d)',year_start);
-        ylabel(ylabel_)
-        titlestr = sprintf('GDP %d is set to 1', year_start);
-        title(titlestr)    
+    hold on
+    %ylabel('GDP (USD)')
+    ylabel(GDP_future.description)
+    titlestr = sprintf('Forecasted GDP from %d to %d', year_start, year_future);
+    title({titlestr ; 'current prices'})
+    xlim([GDP_future.year(1) year_future+5])
+    plot([year_start year_start])
+    %xlim([year_start-1 year_future+5])
+    subaxis(2)
+    hold on
+    xlim([year_start-1 year_future+5])
+    ylabel_ = sprintf('GDP (scaled to %d)',year_start);
+    ylabel(ylabel_)
+    titlestr = sprintf('GDP %d is set to 1', year_start);
+    title(titlestr)
     legendstr = {'IMF forecast';'Extrapolation'};
     if length(country_uni)== 1
         color_ = [0 0 205]/255; %blue
@@ -173,11 +173,11 @@ if check_figure
     end
     %color_    = lines(length(ISO3_uni));
     counter   = 0;
-    h         = [];       
+    h         = [];
 end
 
 
-%% calculate scale up factors for each country
+% calculate scale up factors for each country
 scale_up_factor = zeros(1,length(country_uni));
 
 for c_i = 1:length(country_uni)
@@ -193,7 +193,7 @@ for c_i = 1:length(country_uni)
     else
         c_index = '';
         fprintf('\t\t No country found for "%s"\n', country_uni{c_i})
-    end  
+    end
     if ~any(c_index) %&& ~strcmp(ISO3_uni(c_i),'sea')
         if borders.groupID(c_name)>0
             groupIndex = borders.groupID == borders.groupID(c_name);
@@ -212,11 +212,11 @@ for c_i = 1:length(country_uni)
             fprintf('\t\t More than one country within group has GDP information (%s)\n',names_str);
             c_index = c_index(1);
             fprintf('\t\t Take GDP information  from %s\n',GDP_future.country_names{c_index});
-            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP_future.country_names{c_index}) 
+            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP_future.country_names{c_index})
         else
-            fprintf('\t\t %s is not in GDP database\n',borders.name{c_name}) 
-        end     
-    end   
+            fprintf('\t\t %s is not in GDP database\n',borders.name{c_name})
+        end
+    end
     if any(c_index) & any(~isnan(GDP_future.value(c_index,:))) & any(nonzeros(GDP_future.value(c_index,:)))
         % check if requested year is within the forecasted values
         year_f_index = find(GDP_future.year == year_future);
@@ -232,11 +232,11 @@ for c_i = 1:length(country_uni)
             valid_indx         = ~isnan(GDP_future_country);
             p_GDP   = polyfit(GDP_future.year(valid_indx), GDP_future_country(valid_indx), 1);
             GDP_fit = [GDP_future.value(c_index,year_s_index:end)...
-                           polyval(p_GDP, GDP_future.year(end)+1:year_future)];
+                polyval(p_GDP, GDP_future.year(end)+1:year_future)];
             % calculate scale up factor for specific forecast year
             scale_up_factor(c_i) = GDP_fit(end)/GDP_fit(1);
         end
-                  
+        
         if check_figure
             counter = counter+1;
             hold on
@@ -253,7 +253,7 @@ for c_i = 1:length(country_uni)
             plot(subaxis(2),year_start, GDP_fit(1)/GDP_fit(1),'x','color',color_(counter,:))
             
             text(year_future+1.5, GDP_fit(end)/GDP_fit(1), [num2str(scale_up_factor(c_i),'%2.2f')],'VerticalAlignment','cap','HorizontalAlignment','left',...
-                 'color',color_(counter,:),'fontsize',7,'Parent', subaxis(2))
+                'color',color_(counter,:),'fontsize',7,'Parent', subaxis(2))
             %legendstr{end+1} = borders.name{c_name};
             legendstr{end+1} = [num2str(scale_up_factor(c_i),'%2.2f') ': ' borders.name{c_name}];
         end
@@ -262,29 +262,29 @@ for c_i = 1:length(country_uni)
         return
     end
 end
-if check_figure; 
+if check_figure;
     legend([h(1) g h],legendstr,'location',[0.73 0.4 0.2 0.4],'fontsize',7)
     if isempty(year_f_index); ylim([0.9 max(scale_up_factor)*1.1]); end
     if check_printplot
         token      = strrep(strtok(entity.assets.filename,','),' ','');
         printname  = sprintf('Scale_up_%s_%d_%d.pdf', token, year_start, year_future);
         foldername = [filesep 'results' filesep printname];
-        print(fig,'-dpdf',[climada_global.data_dir foldername])   
+        print(fig,'-dpdf',[climada_global.data_dir foldername])
         cprintf([255 127 36 ]/255,'\t\t saved 1 FIGURE in folder ..%s \n', foldername);
     end
 end
-            
+
 
 % take scale up factors for requested year
 scale_mean = mean(scale_up_factor(scale_up_factor>0));
 scale_up_factor(scale_up_factor == 0) = scale_mean;
 % scale_up_factor(scale_up_factor == 0) = default_scale_up_factor;
-        
 
-%% scale up assets for forecast year with calculated scale up factors
+
+% scale up assets for forecast year with calculated scale up factors
 for c_i = 1:length(country_uni)
     % find centroids and assets within specific country
-    cen_index = strcmp(country_uni{c_i}, centroids.country_name);   
+    cen_index = strcmp(country_uni{c_i}, centroids.country_name);
     en_index  = ismember(entity.assets.centroid_index, centroids.centroid_ID(cen_index));
     if any(en_index)
         entity.assets.Value(en_index)      = scale_up_factor(c_i) * entity.assets.Value(en_index);
@@ -301,7 +301,4 @@ token = strtok(entity.assets.filename,',');
 fprintf('\t\t Entity assets "%s" scaled from %d to %d with average scale up factor %2.2f\n', token, year_start, year_future, mean(scale_up_factor))
 fprintf('\t\t Entity assets sum is %2.4g USD \n\n', sum(entity.assets.Value))
 
-
-%%
-
-    
+end

@@ -1,5 +1,4 @@
-function entity = climada_entity_GDP(entity_base, GDP, year_requested, centroids, borders, check_figure, check_printplot) 
-
+function entity = climada_entity_GDP(entity_base, GDP, year_requested, centroids, borders, check_figure, check_printplot)
 % upscale given base entity (sum of assets is 100, or less if only coastal
 % areas) to match the GDP of a specific country for a given year
 % NAME:
@@ -9,9 +8,9 @@ function entity = climada_entity_GDP(entity_base, GDP, year_requested, centroids
 %   worldbank/IMF, find country for given entity/centroids
 % CALLING SEQUENCE:
 %   entity = climada_entity_GDP(entity_100, GDP, year_start, centroids,
-%   borders, check_figure, check_printplot) 
+%   borders, check_figure, check_printplot)
 % EXAMPLE:
-%   entity = climada_entity_GDP(entity_100, GDP, 2014, centroids) 
+%   entity = climada_entity_GDP(entity_100, GDP, 2014, centroids)
 % INPUTS:
 %   entity_base: entity with entity.assets.Value sum up to 100 for the
 %   entire country (if only coastal areas, sum is less than 100)
@@ -41,7 +40,10 @@ function entity = climada_entity_GDP(entity_base, GDP, year_requested, centroids
 %           MDD        : the mean damage degree
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20140206
+% David N. Bresch, david.bresch@gmail.com, 20141105,
 %-
+
+entity = []; % init output
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
@@ -55,12 +57,12 @@ if ~exist('borders'        , 'var'), borders         = [];end
 if ~exist('check_figure'   , 'var'), check_figure    = 1 ;end
 if ~exist('check_printplot', 'var'), check_printplot = [];end
 
-silent_mode         = 0;
-check_figure_entity = check_figure;
-% check_figure_entity = 1;
-% set modul data directory
 modul_data_dir      = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
-entity              = []; 
+
+% PARAMETERS
+%
+% excel file with GDP information
+GDP_xls_filename = [modul_data_dir filesep 'World_GDP_current_1960_2010.xls'];
 
 if isempty(entity_base)
     entity_base = climada_entity_load;
@@ -69,29 +71,21 @@ end
 fprintf('Step 1: Base entity to GDP %d (latest year of available GDP information)\n', 2010)
 
 
-%% read/load GDP data per country from 1960 to 2010
-if isempty(GDP) 
-    GDP_filename   = [modul_data_dir filesep 'World_GDP_current_1960_2010.mat'];
-    if exist(GDP_filename,'file')
-        load(GDP_filename)
-        if ~silent_mode
-            fprintf('\t\t GDP per country loaded\n\t\t %s\n',GDP.comment)
-        end
+% read/load GDP data per country from 1960 to 2010
+if isempty(GDP)
+    [fP,fN]=fileparts(GDP_xls_filename);
+    GDP_mat_filename   = [fP filesep fN '.mat'];
+    
+    if climada_check_matfile(GDP_xls_filename,GDP_mat_filename)
+        load(GDP_mat_filename);
     else
-        %read xls-file
-        xls_filename = [modul_data_dir filesep 'World_GDP_current_1960_2010.xls'];
-        if exist(xls_filename,'file')
-            if ~silent_mode
-                fprintf('\t\t Read GDP and save as mat-file\n')
-            end
-            GDP = climada_GDP_read(xls_filename, 1, 1, 1);
-            if isempty(GDP)
-                fprintf('\t\t GDP data not available.\n'); return
-            else
-                save(strrep(xls_filename,'.xls','.mat'), 'GDP')
-            end
+        if exist(GDP_xls_filename,'file')
+            GDP = climada_GDP_read(GDP_xls_filename, 1, 1, 1);
+            if isempty(GDP),fprintf('\t\t GDP data not available.\n'),return;end
+            fprintf('saving GDP as %s\n',GDP_mat_filename)
+            save(GDP_mat_filename,'GDP');
         else
-            fprintf('\t\t GDP data %s not found. Unable to proceed. \n', xls_filename)
+            fprintf('\t\t GDP data %s not found. Unable to proceed. \n', GDP_xls_filename)
             return
         end
     end
@@ -106,7 +100,7 @@ if year_requested < min(GDP.year)
 end
 
 
-%% economic development (asset upscaling)
+% economic development (asset upscaling)
 if year_requested > GDP_latest_year
     year_requested_step_2 = year_requested;
     year_requested        = GDP_latest_year;
@@ -131,24 +125,24 @@ if ~isstruct(centroids)
 end
 
 % prompt for borders if not given
-if isempty(borders) 
+if isempty(borders)
     borders = climada_load_world_borders;
 end
 if isempty(borders), fprintf('\t\t no map found\n Unable to proceed.\n'), return, end
-    
 
-%% basic check if entity matches with centroids
+
+% basic check if entity matches with centroids
 uni_index = unique(entity_base.assets.centroid_index);
 if all(ismember(uni_index,centroids.centroid_ID))
     fprintf('\t\t Assets are all encoded to valid centroids.\n')
 else
     fprintf('\t\t Not all assets within entities match with given centroids!\n\t\t Can"t proceed\n')
     entity = [];
-    return    
+    return
 end
 
 
-%% check if centroids have ISO3 country codes (for each centroid)
+% check if centroids have ISO3 country codes (for each centroid)
 country_index = ismember(centroids.centroid_ID, uni_index);
 country_uni   = unique(centroids.country_name(country_index));
 iscountry     = ~ismember(country_uni,{'buffer' 'grid'});
@@ -160,11 +154,11 @@ if length(country_uni) == 1 & isempty(country_uni{1})
 end
 
 
-%% calculate GDP entity_base scale up factors for each country
+% calculate GDP entity_base scale up factors for each country
 % loop over countries, mostly just one country within one entity
 for c_i = 1:length(country_uni)
     
-    %% find centroids and assets within specific country
+    % find centroids and assets within specific country
     c_name  = strcmp(country_uni(c_i), borders.name);
     if any(c_name)
         %fprintf('%s\n',borders.name{c_name})
@@ -176,7 +170,7 @@ for c_i = 1:length(country_uni)
     else
         c_index = '';
         fprintf('\t\t No country found for "%s"\n', country_uni{c_i})
-    end  
+    end
     
     
     if ~any(c_index) %&& ~strcmp(ISO3_uni(c_i),'sea')
@@ -193,20 +187,20 @@ for c_i = 1:length(country_uni)
             fprintf('\t\t More than one country within group has GDP information (%s)\n',names_str);
             c_index = c_index(1);
             fprintf('\t\t Take GDP information  from %s\n',GDP.country_names{c_index});
-            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP.country_names{c_index}) 
+            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP.country_names{c_index})
         else
-            fprintf('\t\t %s is not in GDP database\n',borders.name{c_name}) 
-        end     
-    end   
+            fprintf('\t\t %s is not in GDP database\n',borders.name{c_name})
+        end
+    end
     
-    %% country identified and GDP data for that country is available
+    % country identified and GDP data for that country is available
     if any(c_index) & any(~isnan(GDP.value(c_index,:))) & any(nonzeros(GDP.value(c_index,:)))
         
-        %% check if requested year is within the forecasted values
+        % check if requested year is within the forecasted values
         year_s_index = find(GDP.year == year_requested, 1);
         if isempty(year_s_index); year_s_index = 1; end
         
-        % calculate scaleup_factor as 
+        % calculate scaleup_factor as
         % factor = "GDP for a given country and year" / "sum(assets)", whereas sum(assets) is 100 as defined by entity_base
         % factor = "GDP for a given country and year" / 100
         GDP_val        = GDP.value(c_index, year_s_index);
@@ -217,16 +211,16 @@ for c_i = 1:length(country_uni)
             return
         end
         scaleup_factor = GDP_val / 100;
-        entity         = climada_entity_scaleup_factor(entity_base, scaleup_factor); 
+        entity         = climada_entity_scaleup_factor(entity_base, scaleup_factor);
         fprintf('\t\t GDP for %s in %d is %2.4g USD (current) \n',GDP.country_names{c_index}, year_requested, GDP_val);
         entity.assets.reference_year = year_requested;
         
-        if sum(entity_base.assets.Value) >= 99.5 &  sum(entity_base.assets.Value) <= 100.5 
+        if sum(entity_base.assets.Value) >= 99.5 &  sum(entity_base.assets.Value) <= 100.5
             fprintf('\t\t Entity assets covers %2.1f%% of %s, i.e. GDP for entire %s in %d is %2.4g USD\n',...
-                     sum(entity_base.assets.Value), GDP.country_names{c_index}, GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
+                sum(entity_base.assets.Value), GDP.country_names{c_index}, GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         elseif sum(entity_base.assets.Value) <100
             fprintf('\t\t Entity assets covers %2.1f%% of %s, i.e. GDP for that region in %d is %2.4g USD\n',...
-                     sum(entity_base.assets.Value), GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
+                sum(entity_base.assets.Value), GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         end
     else
         fprintf('\t\t %s: no GDP data available. Stick with base entity where all assets sum up to 100.\n',borders.name{c_name})
@@ -246,10 +240,6 @@ if exist('year_requested_step_2', 'var') % if year_requested > GDP_latest_year
     end
 end
 
-if check_figure_entity
-    climada_plot_entity_assets(entity, centroids, country_uni{1}, check_printplot);
+if check_figure,climada_plot_entity_assets(entity, centroids, country_uni{1}, check_printplot);end
+
 end
-
-%%
-
-    

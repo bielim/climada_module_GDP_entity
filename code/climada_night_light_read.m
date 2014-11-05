@@ -1,6 +1,4 @@
-
 function night_light = climada_night_light_read(png_filename, check_figure, check_printplot, save_on)
-
 % read stable night lights, 2010 (resolution ~10km)
 % http://www.ngdc.noaa.gov/dmsp/downloadV4composites.html 
 % http://www.ngdc.noaa.gov/dmsp/data/web_data/v4composites/F182010.v4.tar 
@@ -73,7 +71,7 @@ night_light.resolution_y = resolution_y;
 night_light.comment      = 'Night time lights, 2010';
          
                   
-%% plot image  
+% plot image  
 if check_figure
     % colormap from green to red
     colormap_green_red = [summer(20);
@@ -122,7 +120,4 @@ end
 
 % plot(centroids.Longitude, centroids.Latitude, '+b')
 
-
-
-%% 
-
+end

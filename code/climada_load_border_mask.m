@@ -1,5 +1,4 @@
 function border_mask = climada_load_border_mask(border_mask, asset_resolution_km)
-
 % load border mask
 % NAME:
 %   climada_load_border_mask
@@ -10,7 +9,7 @@ function border_mask = climada_load_border_mask(border_mask, asset_resolution_km
 % EXAMPLE:
 %   border_mask = climada_load_border_mask
 % INPUTS:
-%   none 
+%   none
 % OPTIONAL INPUT PARAMETERS:
 %   border_mask
 % OUTPUTS:
@@ -19,7 +18,7 @@ function border_mask = climada_load_border_mask(border_mask, asset_resolution_km
 % Lea Mueller, muellele@gmail.com, 20141016
 %-
 
-global climada_global
+%global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 if ~exist('border_mask'         , 'var'), border_mask         = []; end
 if ~exist('asset_resolution_km' , 'var'), asset_resolution_km = []; end
@@ -31,7 +30,7 @@ border_mask    = [];
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
 
-try 
+try
     load([modul_data_dir filesep 'border_mask_10km'])
 catch err
     try
@@ -55,10 +54,8 @@ catch err
             border_mask         = climada_polygon2raster(borders, raster_size, save_on);
         else
             return
-        end    
+        end
     end
 end
 
-
-
-
+end
