@@ -1,5 +1,4 @@
 function [cn,on] = inpoly(p,node,edge,TOL)
-
 %  INPOLY: Point-in-polygon testing.
 %
 % Determine whether a series of points lie within the bounds of a polygon
@@ -38,7 +37,7 @@ function [cn,on] = inpoly(p,node,edge,TOL)
 %   polydemo;       % Will run a few examples
 %
 % See also INPOLYGON
-
+%
 % The algorithm is based on the crossing number test, which counts the
 % number of times a line that extends from each point past the right-most
 % region of the polygon intersects with a polygon edge. Points with odd
@@ -66,6 +65,7 @@ function [cn,on] = inpoly(p,node,edge,TOL)
 %   Last updated   : 23/11/2007 with MATLAB 7.0
 %
 % Problems or suggestions? Email me.
+%-
 
 %% ERROR CHECKING
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
