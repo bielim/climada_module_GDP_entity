@@ -1,5 +1,6 @@
-
 function stru_new_res = climada_downscale(stru, downscale_factor, f_name)
+% see code
+%-
 
 % init global variables
 global climada_global

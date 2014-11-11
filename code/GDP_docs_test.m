@@ -1,4 +1,5 @@
-
+% batch TEST code, see code
+%-
 
 country_name     = 'Mexico';
 load('\\CHRB1065.CORP.GWPNET.COM\homes\X\S3BXXW\Documents\lea\climada_test_environment\climada_additional\GDP_entity\data\border_mask_10km.mat')
