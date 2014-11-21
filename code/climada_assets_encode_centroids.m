@@ -1,5 +1,4 @@
 function [assets, centroids] = climada_assets_encode_centroids(assets, centroids, no_wbar)
-
 % climada assets encode with centroids instead of hazard
 % NAME:
 %   climada_assets_encode_centroids
