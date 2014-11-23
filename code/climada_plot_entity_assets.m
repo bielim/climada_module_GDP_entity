@@ -14,6 +14,7 @@ function fig = climada_plot_entity_assets(entity, centroids, country_name, check
 % INPUTS:
 %   entity          : entity structure, with entity.assets field
 %   centroids       : centroids mat-file (struct)
+%       if passed empty, the information is taken from entity.assets
 % OPTIONAL INPUT PARAMETERS:
 %   country_name_str: country name as string format
 %   check_printplot : 1 for printing (save as pdf), set to 0 by default
@@ -30,13 +31,19 @@ if ~climada_init_vars,return;end % init/import global variables
 fig = [];
 % poor man's version to check arguments
 if ~exist('entity'          ,'var'), return              ; end
-if ~exist('centroids'       ,'var'), return              ; end
+if ~exist('centroids'       ,'var'), centroids=[]        ; end
 if ~exist('country_name'    ,'var'), country_name    = []; end
 if ~exist('check_printplot' ,'var'), check_printplot = []; end
 if ~exist('printname'       ,'var'), printname       = []; end
 
 if ~iscell(country_name)
     country_name = {country_name};
+end
+
+if isempty(centroids)
+    % take lat/lon from entity.assets
+    centroids.Longitude=entity.assets.Longitude;
+    centroids.Latitude=entity.assets.Latitude;
 end
 
 %% calculate figure scaling parameters
