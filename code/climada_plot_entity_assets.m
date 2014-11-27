@@ -1,5 +1,4 @@
 function fig = climada_plot_entity_assets(entity, centroids, country_name, check_printplot, printname)
-
 % climada plot assets from entity file and save if needed
 % NAME:
 %   climada_plot_entity_assets
@@ -23,6 +22,7 @@ function fig = climada_plot_entity_assets(entity, centroids, country_name, check
 %   fig             : figure handle
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20140205
+% David N. Bresch, david.bresch@gmail.com, 20141127, figure creating suppressed
 %-
 
 global climada_global
@@ -46,7 +46,7 @@ if isempty(centroids)
     centroids.Latitude=entity.assets.Latitude;
 end
 
-%% calculate figure scaling parameters
+% calculate figure scaling parameters
 scale  = max(centroids.Longitude) - min(centroids.Longitude);
 scale2 =(max(centroids.Longitude) - min(centroids.Longitude))/...
         (min(max(centroids.Latitude),80)-max(min(centroids.Latitude),-60));
@@ -61,13 +61,13 @@ markersize   = polyval(markersizepp,ax_lim(2) - ax_lim(1));
 markersize(markersize<2) = 2;
 
 
-%% create figure
-fig = climada_figuresize(height,height*scale2+0.15);
-if ~isfield(entity.assets,'reference_year')
-    entity.assets.reference_year = '';
-end
-name_str = sprintf('Entity %s, Reference year %d', country_name{1}, entity.assets.reference_year);
-set(fig,'Name',name_str)
+% create figure
+% fig = climada_figuresize(height,height*scale2+0.15);
+% if ~isfield(entity.assets,'reference_year')
+%     entity.assets.reference_year = '';
+% end
+% name_str = sprintf('Entity %s, Reference year %d', country_name{1}, entity.assets.reference_year);
+% set(fig,'Name',name_str)
 
 plot(entity.assets.Longitude, entity.assets.Latitude,'.', 'color', [238 224 229]/255, 'MarkerSize', 0.05);
 hold on
@@ -75,7 +75,7 @@ hold on
 % colormap(flipud(hot))
 % if length()
 cbar = plotclr(entity.assets.Longitude, entity.assets.Latitude, entity.assets.Value,'s',markersize,1,...
-               [],[],[],[],1);             
+    [],[],[],[],1);
 set(get(cbar,'ylabel'),'String', 'value per pixel (exponential scale)' ,'fontsize',12);
 hold on
 box on
@@ -86,10 +86,12 @@ axis(ax_lim)
 
 if sum(entity.assets.Value)<=100.5
     %title_str = sprintf('Entity %s (sum of all assets: %10.1f)', entity.assets.hazard.comment, sum(entity.assets.Value));
-    title_str = sprintf('Entity: sum of all assets: %10.1f, Base entity', sum(entity.assets.Value));
+    title_str = sprintf('%s: sum of all assets: %10.1f, Base entity',name_str,...
+        sum(entity.assets.Value));
 else %if sum(entity.assets.Value) > 10000
     %title_str = sprintf('Entity %s (sum of all assets: %2.4g USD)', entity.assets.hazard.comment, sum(entity.assets.Value));
-    title_str = sprintf('Entity: sum of all assets: %2.4g USD, Year %d', sum(entity.assets.Value), entity.assets.reference_year);
+    title_str = sprintf('%s %2.4g USD (%d)',char(country_name),...
+        sum(entity.assets.Value), entity.assets.reference_year);
 end
 title(title_str)
 
@@ -108,6 +110,7 @@ if check_printplot
     cprintf([255 127 36 ]/255,'\t\t saved 1 FIGURE in folder ..%s \n', foldername);
 end
 
+fig=gcf; % backward compatibility
 
 return
 
