@@ -36,6 +36,8 @@ if ~exist('country_name'    ,'var'), country_name    = []; end
 if ~exist('check_printplot' ,'var'), check_printplot = []; end
 if ~exist('printname'       ,'var'), printname       = []; end
 
+name_str=''; % init
+
 if ~iscell(country_name)
     country_name = {country_name};
 end
