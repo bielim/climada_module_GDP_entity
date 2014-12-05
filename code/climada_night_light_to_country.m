@@ -1,15 +1,16 @@
-function [values_distributed, pp] = climada_night_light_to_country(country_name, pp, night_light,...
-                                                       borders, border_mask, check_figure, check_printplot, save_on, silent_mode)
-
-% geographically distribute values within one country according to 
-% nonlinearly tranformed night light density values (values between 1 and 63)
-% based on nonlinear relationship between night light intensity and 
-% distribution of GDP assets, use a second order polynomial function 
-% without y-indent: y = pp(1) x^2 + pp(2) x;
+function [values_distributed,pp] = climada_night_light_to_country(country_name,pp,night_light,...
+    borders,border_mask,check_figure,check_printplot,save_on,silent_mode)
 % NAME:
 %   climada_night_light_to_country
 % PURPOSE:
 %   distributed values within one country according to night light density
+%
+%   geographically distribute values within one country according to
+%   nonlinearly tranformed night light density values (values between 1 and 63)
+%   based on nonlinear relationship between night light intensity and
+%   distribution of GDP assets, use a second order polynomial function
+%   without y-indent: y = pp(1) x^2 + pp(2) x;
+%
 %   previous: climada_night_light_read
 %   next: climada_resolution_downscale
 % CALLING SEQUENCE:
@@ -42,7 +43,10 @@ function [values_distributed, pp] = climada_night_light_to_country(country_name,
 %         .comment      : information about distributed GDP data, year and pp
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20130412
+% David N. Bresch, david.bresch@gmail.com, 20141205, cleanup and 1km try (see parameters below)
 %-
+
+values_distributed = []; % init output
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
@@ -58,26 +62,37 @@ if ~exist('silent_mode'        , 'var'), silent_mode         = 0 ; end
 
 % set modul data directory
 modul_data_dir     = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
-values_distributed = [];
-pp                 = [];
+
+% PARAMETERS
+%
+% the file with the night lights
+png_filename = [modul_data_dir filesep 'night_light_2010_10km.png'];
+% 
+% the following high-res night light dataset can be produced by running
+% climada_night_light_read and selecting the high-resolution night light
+% image from the climada module country risk, namely the file
+% ..country_risk/data/F182012.v4c_web.stable_lights.avg_vis.tif and then
+% rename the resulting
+% ..GDP_entity/data/F182012.v4c_web.stable_lights.avg_vis.mat file to
+% ..GDP_entity/data/night_light_2012_1km.mat 
+% BUT: currently leads to an error, since night light resolution (~1km)
+% does in this case not match border mask resolution (~10km)
+%png_filename = [modul_data_dir filesep 'night_light_2012_1km.png'];
 
 if isempty(country_name)
     fprintf('No country chosen. Unable to proceed.\n')
     return
 end
 
-
-
-%% read stable night lights, 2010 (resolution ~10km)
+% read stable night lights, 2010 (resolution ~10km)
 if isempty(night_light)
-    night_light_filename = [modul_data_dir filesep 'night_light_2010_10km.mat'];
-    if exist(night_light_filename,'file')
-        load(night_light_filename)   
+    [~,fN]=fileparts(png_filename);
+    png_filename_mat=[modul_data_dir filesep fN '.mat'];
+    if exist(png_filename_mat,'file')
+        load(png_filename_mat) % contains night_light
     else
-        %read in png-file
-        png_filename = [modul_data_dir filesep 'night_light_2010_10km.png'];
         if exist(png_filename,'file')
-            night_light = climada_night_light_read(png_filename, 0, 0, 1);
+            night_light = climada_night_light_read(png_filename,0,0,1);
         else
             fprintf('Night light %s not found. Unable to proceed. \n', png_filename)
             values_distributed = []; pp = [];
@@ -90,12 +105,12 @@ values = night_light.values;
 % values(isnan(values)) = 0;
 
 
-%% nonlinearly transform night lights, 
-% based on relationship between night lights and asset distribution), 
-% use a second order polynomial function without y-indent 
+% nonlinearly transform night lights,
+% based on relationship between night lights and asset distribution),
+% use a second order polynomial function without y-indent
 % y = pp(3)*x^2 + pp(2)*x + + pp(1)
 if pp == 1
-    pp = [0 1 0]; 
+    pp = [0 1 0];
 end
 [values pp] = climada_nightlight_nonlinear_transformation(values, pp, 0, 0);
 pp_str = 'y = ';
@@ -104,24 +119,23 @@ for i = length(pp):-1:1
 end
 pp_str(end-1:end) = [];
 % pp_str     = num2str(pp,', %2.1e');
-if ~silent_mode; 
-    fprintf('\t Transform night lights to values (nonlinearly or linearly)\n\t %s\n',pp_str); 
+if ~silent_mode;
+    fprintf('\t Transform night lights to values (nonlinearly or linearly)\n\t %s\n',pp_str);
 end
 pp_str_      = strrep(strrep(strrep(strrep(strrep(strrep(pp_str,' ',''),'^',''),'0.',''),'+','_'),'*',''),'.','');
-pp_str_(1:2) = []; 
+pp_str_(1:2) = [];
 % values       = sparse(values);
 
 
-%% range of worldmap
+% range of worldmap
 x_range             = night_light.lon_range;
 y_range             = night_light.lat_range;
 resolution_x        = night_light.resolution_x;
 resolution_y        = night_light.resolution_y;
 input_resolution_km = climada_geo_distance(0,0,night_light.resolution_x,0)/1000;
 input_resolution_km = ceil(input_resolution_km/10)*10;
-  
 
-%% load border_mask file
+% load border_mask file
 
 if isempty(border_mask)
     border_mask = climada_load_border_mask;
@@ -147,8 +161,8 @@ end
 if isempty(borders), return, end
 
 
-  
-%% create distributed matrix
+
+% create distributed matrix
 country_name = climada_check_country_name(country_name);
 if isempty(country_name), return, end
 
@@ -164,11 +178,11 @@ if ~any(values_dist)
     values_dist  = country_mask;
     any(country_mask)
 end
-values_dist  = values_dist / sum(values_dist(:)) * 100;      
+values_dist  = values_dist / sum(values_dist(:)) * 100;
 
 % values_dist  = zeros(size(country_mask));
 % values_dist(logical(country_mask)) =  values(logical(country_mask));
-% values_dist =  values_dist / sum(values_dist(:)) * 100;         
+% values_dist =  values_dist / sum(values_dist(:)) * 100;
 
 
 % % check for groups
@@ -179,11 +193,11 @@ values_dist  = values_dist / sum(values_dist(:)) * 100;
 %     group_index = find(c_borders_index);
 % end
 % if ~isempty(group_index)
-%     
-%     country_name_str = sprintf('%s, ',borders.name{group_index}); 
+%
+%     country_name_str = sprintf('%s, ',borders.name{group_index});
 %     country_name_str(end-1:end) = [];
 %     fprintf('\t\t Distribute values according to night lights within %s on a %d km resolution\n',country_name_str, asset_resolution_km)
-% 
+%
 %     % if more than one country, put all countries together in
 %     % one country_mask
 %     country_mask = zeros(size(border_mask.mask{1}));
@@ -191,10 +205,10 @@ values_dist  = values_dist / sum(values_dist(:)) * 100;
 %         country_mask = country_mask + border_mask.mask{group_index(group_index_i)};
 %     end
 %     country_mask(country_mask>1) = 1;
-% 
+%
 %     values_dist = zeros(size(country_mask));
 %     values_dist(logical(country_mask)) =  values(logical(country_mask));
-%     values_dist =  values_dist / sum(values_dist(:)) * 100;          
+%     values_dist =  values_dist / sum(values_dist(:)) * 100;
 % else
 %     fprintf('\t\t No country mask for %s. Unable to proceed.\n', country_name)
 %     return
@@ -210,21 +224,21 @@ values_distributed.comment      = sprintf('nonlinear function, %s', pp_str);
 
 
 if check_figure
-    % find minimum and maximum of longitude, latitude for axis limits  
+    % find minimum and maximum of longitude, latitude for axis limits
     res_x           = values_distributed.resolution_x;
     [X, Y ]         = meshgrid(values_distributed.lon_range(1)+res_x/2: res_x: values_distributed.lon_range(2)-res_x/2, ...
-                               values_distributed.lat_range(1)+res_x/2: res_x: values_distributed.lat_range(2)-res_x/2);              
+        values_distributed.lat_range(1)+res_x/2: res_x: values_distributed.lat_range(2)-res_x/2);
     nonzero_index   = values_distributed.values>0;
     delta           = 2;
     axislim         = [min(X(nonzero_index))-delta  max(X(nonzero_index))+delta ...
-                       min(Y(nonzero_index))-delta  max(Y(nonzero_index))+delta];
-     
+        min(Y(nonzero_index))-delta  max(Y(nonzero_index))+delta];
+    
     fig_width       = abs(axislim(2) - axislim(1));
     fig_height      = abs(axislim(4) - axislim(3));
     fig_relation    = fig_height/fig_width;
     fig_height_     =  0.7;
     fig             = climada_figuresize(fig_height_*fig_relation,fig_height_);
-                   
+    
     imagesc(x_range-resolution_x/2, y_range-resolution_y/2, log10(full(values_distributed.values)))
     
     a = full(values_distributed.values);
@@ -244,11 +258,11 @@ if check_figure
     %caxis([0 full(max(values_distributed.values(:)))*0.5])
     %caxis(log10([0.00032 0.33])) for Switzerland
     caxis(sort([log10(min(a))*0.99 log10(max(a))*1.01])) % for logarithmic color scale
-         
+    
     t = colorbar;
     ytick_ = get(t,'ytick');
-    set(t,'YTick',ytick_,'YTickLabel',sprintf('%1.2g|',10.^ytick_)) 
-        
+    set(t,'YTick',ytick_,'YTickLabel',sprintf('%1.2g|',10.^ytick_))
+    
     %colorbar_label = sprintf('%s\n GDP %d',GDP.comment, year);
     colorbar_label = sprintf('values (sum 100), exponential scale');
     set(get(t,'ylabel'),'String', colorbar_label,'fontsize',14);
@@ -256,13 +270,13 @@ if check_figure
     axis(axislim)
     titlestr = sprintf('\t %s, %d km\nValues based on nonlinear transformed night lights\n(%s) \n%d km ', country_name, asset_resolution_km, pp_str);
     title(titlestr)
-        
-    if check_printplot %(>=1)   
+    
+    if check_printplot %(>=1)
         foldername = [filesep 'results' filesep 'Values_distributed_' country_name '_' int2str(input_resolution_km) 'km_' pp_str_ '.pdf'];
         print(fig,'-dpdf',[climada_global.data_dir foldername])
         %close
         cprintf([255 127 36 ]/255,'\t\t saved 1 FIGURE in folder ..%s \n', foldername);
-       
+        
     end
 end
 
@@ -274,15 +288,9 @@ if save_on
     end
 end
 
-      
 
 
-
-
-
-
-
-%% put all countries in one matrix all_borders
+% put all countries in one matrix all_borders
 % all_borders = zeros(size(values,1), size(values,2));
 % for country_i = 1:length(borders.name)
 %     [a b] = find(all_borders(logical(border_mask{country_i})));
@@ -292,7 +300,7 @@ end
 %     end
 %     all_borders(logical(border_mask{country_i})) = country_i;
 % end
-% 
+%
 % figure
 % climada_plot_world_borders
 % set(gca,'ydir','normal')
@@ -300,10 +308,3 @@ end
 % colormap(lines)
 % imagesc(x_range-resolution_x/2,y_range-resolution_y/2,all_borders)
 % colorbar
-
-
-
-%%
-
-
-
