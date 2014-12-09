@@ -1,11 +1,6 @@
 function [centroids, entity] = climada_create_centroids_entity_base(country_name, asset_resolution_km, hollowout,...
                                                      check_for_groups, night_light, pp, borders, border_mask, ... 
                                                      check_figure, save_on_entity_centroids, no_wbar)
-
-%%
-% create a portfolio for a specific country, consisting of
-%   - centroids (mat-file)
-%   - entity (assets add up to 100 for an entire country, mat and xls-file)
 % NAME:
 %   climada_create_centroids_entity_base
 % PURPOSE:
@@ -17,33 +12,37 @@ function [centroids, entity] = climada_create_centroids_entity_base(country_name
 %   [centroids entity] = climada_create_centroids_entity_base;
 %   [centroids entity] = climada_create_centroids_entity_base('Bangladesh', 10);
 % INPUTS:
-%   country_name    : a read assets structure, see climada_entity_read
-%   asset_resolution_km: resolution for centroids and assets within entity,
-%                        default 10km
+%   country_name: the name of the country or an ISO3 country code (like
+%       'CHE'), see climada_check_country_name
+%   asset_resolution_km:resolution for centroids and assets within entity,
+%       default 10km
 %   check_for_groups: if country is within a group (e.g. China with
-%                     Taiwan), to combine the two or more regions, default do not check
-%   hollowout       : hollwout country, so to take only points close to the coast
-%                     line, default do not hollowout
-%   night_light     : structure with night light intensities, automatically load
-%                     from mat or read from default file
-%   pp              : nonlinear transformation function of night lights to values (e.g.
-%                     pp = [0 1 0]; y = 0*x^2 + 1*x + 0
-%   borders         : border structure (with name, polygon for every country)
-%   border_mask     : structure with all country masks (zeros and ones)
-%   check_figure    : set to 1 to visualize figures, default 1
+%       Taiwan), to combine the two or more regions, default do not check
+%       DISABLED, run the code multiple times (see also climada module
+%       country risk)
+%   hollowout: hollwout country, so to take only points close to the coast
+%       line, default do not hollowout
+%   night_light: structure with night light intensities, automatically load
+%       from mat or read from default file
+%   pp: nonlinear transformation function of night lights to values (e.g.
+%       pp = [0 1 0]; y = 0*x^2 + 1*x + 0
+%   borders: border structure (with name, polygon for every country)
+%   border_mask: structure with all country masks (zeros and ones)
+%   check_figure: set to 1 to visualize figures, default 1
 %   save_on_entity_centroids: to save entity and centroids automatically,
-%                     default 1
-%   no_wbar         : 1 to suppress waitbars
+%       default 1
+%   no_wbar: 1 to suppress waitbars
 % OUTPUTS:
-%   centroids       : a structure with fields centroid_ID, Latitude, Longitude,
-%                     onLand, country_name, comment for each centroid
-%   entity          : an entity structure with fields assets, damagefunctions, 
-%                     measures, discount. Asset values from an entire country 
-%                     sum up to 100. If only coastal areas are selected,
-%                     values sum up to less than 100.
+%   centroids: a structure with fields centroid_ID, Latitude, Longitude,
+%       onLand, country_name, comment for each centroid
+%   entity: an entity structure with fields assets, damagefunctions, 
+%       measures, discount. Asset values from an entire country 
+%       sum up to 100. If only coastal areas are selected,
+%       values sum up to less than 100.
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20140205
 % david.bresch@gmail.com, 20140216, replaced variable entity_base with entity for compatibility
+% david.bresch@gmail.com, 20141209, country or ISO3 enabled
 %-
     
 close all
@@ -99,17 +98,16 @@ if isempty(border_mask), return, end
 %% 0c) ask for country or region
  
 if isempty(country_name)
-   country_name = climada_ask_country_name;
+   [country_name,country_ISO3] = climada_ask_country_name;
 end
 
-%check country name
-country_name = climada_check_country_name(country_name);
+% check country name (and obtain ISO3)
+[country_name,country_ISO3] = climada_check_country_name(country_name);
 if isempty(country_name)
     cprintf([1,0.5,0],'No valid country name as input. Unable to proceed.\n')
     return
 end
-country_name_str = strrep(country_name,' ','');   
-
+country_name_str = strrep(country_name,' ',''); % remove spaces
 
 %%
 %     if ~iscell(country_name)
@@ -258,6 +256,10 @@ if check_figure
     climada_plot_centroids(centroids, country_name, check_printplot, printname);
 end
 
+% add country info
+centroids.admin0_name=country_name;
+centroids.admin0_ISO3=country_ISO3;
+
 if save_on_entity_centroids
     centroids_filename = [climada_global.system_dir filesep 'centroids_' strrep(country_name_str,', ','') '_' int2str(asset_resolution_km) 'km_' hollow_name];
     save(centroids_filename,'centroids')
@@ -275,6 +277,10 @@ fprintf('3) Create base entity\n')
 % create entity, read wildcard entity, add assets from values_distributed,
 % and encode to centroids
 entity = climada_entity_base_assets_add(values_distributed, centroids, country_name_str, matrix_hollowout,  X, Y, hollow_name, no_wbar);
+
+% add country info
+entity.assets.admin0_name=country_name;
+entity.assets.admin0_ISO3=country_ISO3;
 
 save_entity_xls = 1;
 % save entity as mat-file

@@ -1,4 +1,4 @@
-function fig = climada_plot_entity_assets(entity, centroids, country_name, check_printplot, printname)
+function fig = climada_plot_entity_assets(entity,centroids,country_name,check_printplot,printname)
 % climada plot assets from entity file and save if needed
 % NAME:
 %   climada_plot_entity_assets
@@ -23,6 +23,7 @@ function fig = climada_plot_entity_assets(entity, centroids, country_name, check
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20140205
 % David N. Bresch, david.bresch@gmail.com, 20141127, figure creating suppressed
+% David N. Bresch, david.bresch@gmail.com, 20141208, country_name='' as default
 %-
 
 global climada_global
@@ -32,7 +33,7 @@ fig = [];
 % poor man's version to check arguments
 if ~exist('entity'          ,'var'), return              ; end
 if ~exist('centroids'       ,'var'), centroids=[]        ; end
-if ~exist('country_name'    ,'var'), country_name    = []; end
+if ~exist('country_name'    ,'var'), country_name    = ''; end
 if ~exist('check_printplot' ,'var'), check_printplot = []; end
 if ~exist('printname'       ,'var'), printname       = []; end
 
