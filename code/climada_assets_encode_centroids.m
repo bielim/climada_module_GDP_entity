@@ -32,7 +32,7 @@ if ~climada_init_vars,return;end % init/import global variables
 % poor man's version to check arguments
 if ~exist('assets'    ,'var'), return        ;end
 if ~exist('centroids' ,'var'), centroids = [];end
-if ~exist('no_wbar'   ,'var'), no_wbar   = 0 ;end
+if ~exist('no_wbar'   ,'var'), no_wbar = ~climada_global.waitbar;end
 
 % PARAMETERS
 %

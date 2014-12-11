@@ -68,7 +68,7 @@ resolution_y = sum(abs(y_range))/raster_x;
                         y_range(1)+resolution_y/2: resolution_y: y_range(2)-resolution_y/2);
 
 % waitbar
-h = waitbar(0);
+if climada_global.waitbar,h = waitbar(0);end
 
 % go through each country and their polygons
 for country_i = 1:length(borders.poly)
@@ -80,7 +80,7 @@ for country_i = 1:length(borders.poly)
     
     for island_i = 1:n_islands
         
-        waitbar(island_i/n_islands, h, msgstr);
+        if climada_global.waitbar,waitbar(island_i/n_islands, h, msgstr);end
         %waitbar(island_i/n_islands, h, msgstr); % update waitbar)
         
         lon_range = [min(borders.poly{country_i}.lon{island_i})...
@@ -105,7 +105,7 @@ for country_i = 1:length(borders.poly)
     end
 end %country_i
 
-close(h) % close waitbar
+if climada_global.waitbar,close(h);end % close waitbar
 
 
 % creating world mask, 1 for on land, 0 for sea

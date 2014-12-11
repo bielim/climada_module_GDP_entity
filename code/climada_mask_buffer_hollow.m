@@ -1,6 +1,5 @@
 function matrix_buffer = climada_mask_buffer_hollow(matrix, no_pixel_buffer, no_pixel_hollow, border_mask, ...
                                                     check_figure, check_printplot, printname, cbar_label, no_wbar)
-
 % create buffer around country (matrix masking 1 for onland (or higher 
 % values if more than one country), 0 for sea, max value for bufferzone)
 % NAME:
@@ -47,7 +46,7 @@ if ~exist('check_figure'    , 'var'), check_figure    = 1 ; end
 if ~exist('check_printplot' , 'var'), check_printplot = []; end
 if ~exist('printname'       , 'var'), printname       = ''; end
 if ~exist('cbar_label'      , 'var'), cbar_label      = ''; end
-if ~exist('no_wbar'         , 'var'), no_wbar         = 0; end
+if ~exist('no_wbar'         , 'var'), no_wbar         = ~climada_global.waitbar; end
 
 % set modul data directory
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
