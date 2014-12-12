@@ -161,13 +161,16 @@ end
 if isempty(borders), return, end
 
 
-
 % create distributed matrix
-country_name = climada_check_country_name(country_name);
+country_name = climada_country_name(country_name);
 if isempty(country_name), return, end
 
 % create country mask for selected country
 c_indx       = strcmp(country_name, borders.name);
+if sum(c_indx)==0
+    fprintf('ERROR: %s, country name does not match any border information\n',mfilename)
+    return
+end
 country_mask = border_mask.mask{c_indx};
 if ~any(country_mask)
     cprintf([1,0.5,0],'\t %s is too small and does not exist as a mask. Unable to proceed.\n', country_name)

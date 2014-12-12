@@ -13,7 +13,7 @@ function [centroids, entity, entity_future] = climada_create_GDP_entity(country_
 %   [centroids entity entity_future] = climada_create_GDP_entity('Mexico')
 % INPUTS:
 %   country_name: the name of the country or an ISO3 country code (like
-%       'CHE'), see climada_check_country_name
+%       'CHE'), see climada_country_name
 %   polygon: do restrict to centroids in polygon, calls
 %       climada_cut_out_GDP_entity, see parameters there.
 %   check_figure: set to 1 to visualize figures, default 1

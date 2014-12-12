@@ -64,13 +64,7 @@ if ~isstruct(GDP)
 end
 
 % load the borders file, if not given
-if isempty(borders)
-    foldername    = [climada_global.system_dir filesep];
-    border_file   = [foldername 'world_50m'];
-    load(border_file)
-    if ~silent_mode, fprintf('Climada world border file loaded to compare country names.\n'); end
-end
-
+if isempty(borders),borders = climada_load_world_borders;end
 
 
 %% GDP.no_countries
