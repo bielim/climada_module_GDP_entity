@@ -1,4 +1,7 @@
 function [centroids, entity, entity_future] = climada_create_GDP_entity(country_name, polygon, check_figure, no_wbar)
+% GDP entity assets
+% MODULE:
+%   GDP_entity
 % NAME:
 %   climada_create_GDP_entity
 % PURPOSE:
@@ -30,6 +33,7 @@ function [centroids, entity, entity_future] = climada_create_GDP_entity(country_
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20140206
 % David N. Bresch, david.bresch@gmail.com, 20141209, country ISO3 enabled
+% David N. Bresch, david.bresch@gmail.com, 20141212, migrated to world_50m.gen being local to GDP_entity, as climada moved to admin0.mat
 %-
 
 % import/setup global variables

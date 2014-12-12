@@ -12,7 +12,7 @@ function night_light = climada_night_light_read(png_filename, check_figure, chec
 %
 %   previous: diverse
 %   next: climada_GDP_distribute
-%   see also: module country_risk, climada_high_res_entity
+%   see also: module country_risk, climada_nightlight_entity
 % CALLING SEQUENCE:
 %   night_light = climada_night_light_read(png_filename, check_figure, check_printplot, save_on)
 % EXAMPLE:
