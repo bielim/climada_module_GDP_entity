@@ -34,9 +34,10 @@ function entity_base = climada_entity_base_assets_add(values_distributed, centro
 % david.bresch@gmail.com, 20140216, _2012 replaced by _today
 % david.bresch@gmail.com, 20140216, assets.comment introduced
 % david.bresch@gmail.com, 20141104, climada_check_matfile used
+% david.bresch@gmail.com, 20141215, switch to entity_template.xls
 %-
 
-%global climada_global
+global climada_global
 if ~climada_init_vars,return;end % init/import global variables
 
 entity = [];
@@ -52,7 +53,8 @@ if ~exist('no_wbar'           , 'var'), no_wbar     = 0 ;end
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 %
 % define the file with an empty entity (used as 'template')
-entity_global_without_assets_file=[modul_data_dir filesep 'entity_global_without_assets.xls'];
+entity_global_without_assets_file=[climada_global.data_dir filesep 'entities' filesep 'entity_template.xls'];
+%entity_global_without_assets_file=[modul_data_dir filesep 'entity_global_without_assets.xls']; % until 20141215
 
 
 if ~climada_check_matfile(entity_global_without_assets_file)
