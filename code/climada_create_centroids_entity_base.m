@@ -43,6 +43,7 @@ function [centroids, entity] = climada_create_centroids_entity_base(country_name
 % Lea Mueller, muellele@gmail.com, 20140205
 % david.bresch@gmail.com, 20140216, replaced variable entity_base with entity for compatibility
 % david.bresch@gmail.com, 20141209, country or ISO3 enabled
+% david.bresch@gmail.com, 20141229, tolerant iro country names
 %-
 
 close all
@@ -102,10 +103,12 @@ if isempty(country_name)
 end
 
 % check country name (and obtain ISO3)
-[country_name,country_ISO3] = climada_country_name(country_name);
-if isempty(country_name)
-    cprintf([1,0.5,0],'No valid country name as input. Unable to proceed.\n')
-    return
+[country_name_chckd,country_ISO3] = climada_country_name(country_name);
+if isempty(country_name_chckd)
+    country_ISO3='XXX'; % be tolerant...
+    cprintf([1,0.5,0],'Warning: Might be an unorthodox country name as input - check results\n')
+else
+    country_name=country_name_chckd;
 end
 country_name_str = strrep(country_name,' ',''); % remove spaces
 

@@ -1,5 +1,4 @@
 function border_mask = climada_polygon2raster(borders, raster_size, save_on)
-
 % create raster (mask with 1 for inside and on polygon, and zeros for
 % outside polygon) based on polygon-input for a specific raster size
 % NAME:
@@ -31,8 +30,8 @@ function border_mask = climada_polygon2raster(borders, raster_size, save_on)
 %  .resolution_y: resolution in y direction in degree
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20120730
+% David N. Bresch, david.bresch@gmail.com, 20141229, revision
 %-
-
 
 global climada_global
 if ~climada_init_vars,return;end % init/import global variables
@@ -46,7 +45,7 @@ modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
 % load the borders file, if not given
 if isempty(borders)
-    borders = climada_load_world_borders(borders);
+    borders = climada_load_world_borders;
 end
 if isempty(borders), return, end
 

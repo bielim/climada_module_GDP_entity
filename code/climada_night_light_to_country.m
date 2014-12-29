@@ -162,8 +162,8 @@ if isempty(borders), return, end
 
 
 % create distributed matrix
-country_name = climada_country_name(country_name);
-if isempty(country_name), return, end
+%country_name = climada_country_name(country_name);
+%if isempty(country_name), return, end
 
 % create country mask for selected country
 c_indx       = strcmp(country_name, borders.name);

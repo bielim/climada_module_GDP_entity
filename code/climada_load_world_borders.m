@@ -4,6 +4,10 @@ function borders = climada_load_world_borders
 %   GDP_entity
 % NAME:
 %   climada_load_world_borders
+%
+%   An OLD code, please consider climada_shaperead
+%   Kept for backward compatibility, only used by GDP_entity
+%
 % PURPOSE:
 %   load world borders and perform basic checks
 %
@@ -48,14 +52,13 @@ function borders = climada_load_world_borders
 %   borders
 % MODIFICATION HISTORY:
 % Lea Mueller, muellele@gmail.com, 20141016
-% David N. Bresch, david.bresch@gmail.com, 20141126,
+% David N. Bresch, david.bresch@gmail.com, 20141126, for backward compatibility
 %-
 
 borders = []; % init
 
-global climada_global
+%global climada_global
 if ~climada_init_vars,return;end % init/import global variables
-if ~exist('borders'       , 'var'), borders        = []; end
 
 module_data_dir=[fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
