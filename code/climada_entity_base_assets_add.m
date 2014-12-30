@@ -105,6 +105,6 @@ end
 
 % encode assets
 fprintf('\t c) Encode assets to centroids\n')
-entity_base.assets = climada_assets_encode_centroids(assets, centroids, no_wbar);
+entity_base.assets = climada_assets_encode(assets, centroids);
 
 return

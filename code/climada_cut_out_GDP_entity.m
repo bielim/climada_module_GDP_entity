@@ -202,7 +202,7 @@ end
 % plot(centroids.Longitude, centroids.Latitude, 'xr')
 
 % encode assets to new centroids
-[entity.assets,centroids] = climada_assets_encode_centroids(entity.assets,centroids);
+entity.assets = climada_assets_encode(entity.assets,centroids);
 
 % climada_plot_world_borders
 % plot(centroids.Longitude(1:1341), centroids.Latitude(1:1341), 'xr')
