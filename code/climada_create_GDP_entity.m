@@ -72,7 +72,7 @@ entity_future = [];
 %% create entity_base (all values add up to 100 within the specified country) and create the centroids on the required resolution
 [centroids_ori, entity_base] = climada_create_centroids_entity_base(country_name, asset_resolution_km, hollowout,...
                                                         check_for_groups,night_light, pp, borders, border_mask, ... 
-                                                        check_figure, save_on_entity_centroids, no_wbar);
+                                                        check_figure, save_on_entity_centroids, no_wbar);                                           
 if isempty(entity_base), return, end
   
 

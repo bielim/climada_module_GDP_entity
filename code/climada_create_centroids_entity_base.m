@@ -99,7 +99,7 @@ if isempty(border_mask), return, end
 %% 0c) ask for country or region
 
 if isempty(country_name)
-    [country_name,country_ISO3] = climada_country_name('SINGLE');
+    [country_name,country_ISO3] = climada_country_name('Single');
 end
 
 % check country name (and obtain ISO3)
@@ -215,7 +215,7 @@ else
 end
 
 % for big countries this can take some time
-if asset_resolution_km_ori >= asset_resolution_km-4 & asset_resolution_km_ori <= asset_resolution_km+4;
+if asset_resolution_km_ori >= asset_resolution_km-4 && asset_resolution_km_ori <= asset_resolution_km+4;
     c_idx            = strcmp(border_mask.name, country_name);
     
     % downscale resolution

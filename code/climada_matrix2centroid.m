@@ -70,7 +70,7 @@ for i = 1:length(uni_val)
     onLand      = [onLand  zeros(1,length(Y(buffer_index)'))+uni_val(i)];
     
     if ~isempty(country_name)
-        if i == length(uni_val) & length(uni_val)>1
+        if i == length(uni_val) && length(uni_val)>1
             country_n    = [country_n repmat({'buffer'},1,length(Y(buffer_index)')) ];
         else
             country_n    = [country_n repmat(country_name(uni_val(i)),1,length(Y(buffer_index)')) ];
@@ -96,7 +96,7 @@ resolution_km_addon_centroids = climada_geo_distance(0,0,resolution_x,0)/1000*5;
 % [low_resolution_matrix, X, Y] = climada_resolution_downscale(matrix_structure, 500, 'unique');
 sea_index = ~low_resolution_matrix.values >0 ;
 
-%within 1000 km of land, 10° ~1000km
+%within 1000 km of land, 10? ~1000km
 % distance = climada_geo_distance(0,0,10,0)/1000;
 dist     = 1; %~100 km
 landpoly = [min(Longitude)-dist  min(Latitude)-dist;

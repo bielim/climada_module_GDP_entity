@@ -145,9 +145,10 @@ end
 % check if centroids have ISO3 country codes (for each centroid)
 country_index = ismember(centroids.centroid_ID, uni_index);
 country_uni   = unique(centroids.country_name(country_index));
+
 iscountry     = ~ismember(country_uni,{'buffer' 'grid'});
 country_uni   = country_uni(iscountry);
-if length(country_uni) == 1 & isempty(country_uni{1})
+if length(country_uni) == 1 && isempty(country_uni{1})
     fprintf('\t\t No country names for centroids!\n\t\t Unable to proceed.\n')
     entity = [];
     return
@@ -194,7 +195,7 @@ for c_i = 1:length(country_uni)
     end
     
     % country identified and GDP data for that country is available
-    if any(c_index) & any(~isnan(GDP.value(c_index,:))) & any(nonzeros(GDP.value(c_index,:)))
+    if any(c_index) && any(~isnan(GDP.value(c_index,:))) && any(nonzeros(GDP.value(c_index,:)))
         
         % check if requested year is within the forecasted values
         year_s_index = find(GDP.year == year_requested, 1);
@@ -215,7 +216,7 @@ for c_i = 1:length(country_uni)
         fprintf('\t\t GDP for %s in %d is %2.4g USD (current) \n',GDP.country_names{c_index}, year_requested, GDP_val);
         entity.assets.reference_year = year_requested;
         
-        if sum(entity_base.assets.Value) >= 99.5 &  sum(entity_base.assets.Value) <= 100.5
+        if sum(entity_base.assets.Value) >= 99.5 &&  sum(entity_base.assets.Value) <= 100.5
             fprintf('\t\t Entity assets covers %2.1f%% of %s, i.e. GDP for entire %s in %d is %2.4g USD\n',...
                 sum(entity_base.assets.Value), GDP.country_names{c_index}, GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         elseif sum(entity_base.assets.Value) <100
