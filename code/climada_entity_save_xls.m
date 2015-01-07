@@ -17,13 +17,14 @@ function climada_entity_save_xls(entity, entity_xls_file,dam_funct_overwrite,mea
 %   excel file
 % MODIFICATION HISTORY:
 % Lea Mueller, 20130412
-% Gilles Stassen gillesstassen@hotmail.com 20141210 - change condition from
+% Gilles Stassen 20141210 - change condition from
 %                  multiple strcmp() statements to ismember(); add relevant
 %                  'wrong' fields to cell array to be checked in line 64;
 %                  change to dynamic field referencing instead of getfield;
 %                  add isnumeric condition to damagefunction section to
 %                  include peril_ID field.
-% Gilles Stassen gillesstassen@hotmail.com 20141211 - add overwrite options for non-asset sheets
+% Gilles Stassen 20141211 - add overwrite options for non-asset sheets
+% Gilles Stassen 20150106 - generalise condition on entity.assets.(fields)
 %-
 
 global climada_global
@@ -69,7 +70,7 @@ fields_2 =  fieldnames(entity.assets);
 counter  = 0;
 matr     = cell(length(entity.assets.Longitude)+1,5);
 for row_i = 1:length(fields_2)
-    if ~ismember(fields_2{row_i},{'comment', 'filename', 'hazard', 'reference_year', 'GDP'})
+    if isnumeric(entity.assets.(fields_2{row_i})) && numel(entity.assets.(fields_2{row_i})) > 1
         counter         = counter+1;
         matr{1,counter} = fields_2{row_i};
         matr(2:end,counter) = num2cell(entity.assets.(fields_2{row_i})');
