@@ -62,16 +62,16 @@ modul_data_dir      = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data
 % PARAMETERS
 %
 % excel file with GDP information
-GDP_xls_filename = [modul_data_dir filesep 'World_GDP_current_1960_2010.xls'];
+GDP_xls_filename = [modul_data_dir filesep 'World_GDP_current_1960_2013.xls'];
 
 if isempty(entity_base)
     entity_base = climada_entity_load;
 end
 
-fprintf('Step 1: Base entity to GDP %d (latest year of available GDP information)\n', 2010)
+fprintf('Step 1: Base entity to GDP %d (latest year of available GDP information)\n', 2013)
 
 
-% read/load GDP data per country from 1960 to 2010
+% read/load GDP data per country from 1960 to 2013
 if isempty(GDP)
     [fP,fN]=fileparts(GDP_xls_filename);
     GDP_mat_filename   = [fP filesep fN '.mat'];
