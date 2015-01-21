@@ -18,3 +18,5 @@ data/night_light_2012_1km.txt
 data/world_50m.mat
 
 code/climada_entity_save_xls_OLD.m
+
+data/World_GDP_current.mat
