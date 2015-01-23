@@ -35,6 +35,7 @@ function entity_base = climada_entity_base_assets_add(values_distributed, centro
 % david.bresch@gmail.com, 20140216, assets.comment introduced
 % david.bresch@gmail.com, 20141104, climada_check_matfile used
 % david.bresch@gmail.com, 20141215, switch to entity_template.xls
+% Lea Mueller, muellele@gmail.com, 20150123, omit assets.Value_today, not needed
 %-
 
 global climada_global
@@ -90,12 +91,11 @@ assets.Value            = full(values_distributed.values(mask_index))';
 assets.Deductible       = zeros(1,length(assets.Longitude));
 assets.Cover            = full(values_distributed.values(mask_index))';
 assets.DamageFunID      = ones(1,length(assets.Longitude));
-assets.Value_today      = full(values_distributed.values(mask_index))'; % _2012 replaced by _today
+%assets.Value_today      = full(values_distributed.values(mask_index))'; % _2012 replaced by _today
 assets.reference_year   = [];
 if sum(assets.Value)<100.5 && sum(assets.Value)>99.5
     assets.reference_year = 100;
 end
-
 
 if ~any(assets.Value)%all zeros
     fprintf('\t\t No values within assets for %s\n', country_name_str)

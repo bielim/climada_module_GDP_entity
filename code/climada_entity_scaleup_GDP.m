@@ -102,7 +102,8 @@ end
 % prompt for borders if not given
 if isempty(borders)
     if isfield(climada_global,'map_border_file')
-        map_border_file = strrep(climada_global.map_border_file,'.gen','.mat');
+        %map_border_file = strrep(climada_global.map_border_file,'.gen','.mat');
+        map_border_file = [modul_data_dir filesep 'world_50m.mat'];
     else
         fprintf('\t\t no map found\n Unable to proceed.\n')
         return

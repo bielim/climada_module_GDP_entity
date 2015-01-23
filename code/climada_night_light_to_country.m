@@ -67,7 +67,6 @@ modul_data_dir     = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'
 %
 % the file with the night lights
 png_filename = [modul_data_dir filesep 'night_light_2010_10km.png'];
-% 
 % the following high-res night light dataset can be produced by running
 % climada_night_light_read and selecting the high-resolution night light
 % image from the climada module country risk, namely the file
