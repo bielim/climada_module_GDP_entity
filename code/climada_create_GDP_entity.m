@@ -21,7 +21,8 @@ function [centroids, entity, entity_future] = climada_create_GDP_entity(country_
 %       climada_cut_out_GDP_entity, see parameters there.
 %   check_figure: set to 1 to visualize figures, default 1
 %   no_wbar: 1 to suppress waitbars
-% none
+%   GDP: GDP data within a structure, prompted for if not given, loaded
+%       automatically from economic_indicators_mastertable.mat file if existing
 % OUTPUTS:
 %   centroids: a structure with fields centroid_ID, Latitude, Longitude,
 %       onLand, country_name, comment for each centroid
@@ -34,6 +35,9 @@ function [centroids, entity, entity_future] = climada_create_GDP_entity(country_
 % Lea Mueller, muellele@gmail.com, 20140206
 % David N. Bresch, david.bresch@gmail.com, 20141209, country ISO3 enabled
 % David N. Bresch, david.bresch@gmail.com, 20141212, migrated to world_50m.gen being local to GDP_entity, as climada moved to admin0.mat
+% Melanie Bieli, melanie.bieli@bluewin.ch, 20150125, incorporated climada_entity_value_GDP_adjust to scale up the entity, ... 
+%                                                    climada_entity_GDP not used anymore
+%
 %-
 
 % import/setup global variables
@@ -42,10 +46,21 @@ if ~climada_init_vars,return;end;
 
 if ~exist('country_name', 'var'), country_name = []  ; end
 
+% PARAMETERS
 % set the parameters according to your needs
 asset_resolution_km      = 10;
 year_start               = climada_global.present_reference_year;
 year_future              = climada_global.future_reference_year;
+%
+% excel file with GDP information
+GDP_xls_filename = [climada_global.data_dir filesep 'system' filesep 'economic_indicators_mastertable.xls'];
+%
+% GDP in year_future (if not known, it will be extrapolated based on past
+% GDP data)
+GDP_future=[];
+%
+% misdat values in GDP table (default: economic_indicators_mastertable.xls) 
+misdat_value = -999;
 
 if ~exist('check_figure', 'var'), check_figure = 1; end
 if ~exist('no_wbar'     , 'var'), no_wbar      = 1; end
@@ -76,13 +91,30 @@ entity_future = [];
 if isempty(entity_base), return, end
   
 
-%% scale up entity_base to match GDP of year_start                                                 
-entity          = climada_entity_GDP(entity_base, GDP, year_start , centroids_ori, borders, check_figure, check_printplot);  
-if isempty(entity), return, end
+% %% scale up entity_base to match GDP of year_start                                                 
+% entity          = climada_entity_GDP(entity_base, GDP, year_start , centroids_ori, borders, check_figure, check_printplot);  
+% if isempty(entity), return, end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trying to incorporate
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% climada_entity_value_GDP_adjust
 
-%% scale up entity_base to match GDP of year_forecast
-entity_future   = climada_entity_GDP(entity_base, GDP, year_future, centroids_ori, borders, check_figure, check_printplot);   
+% temporarily save the entity in the pwd, such that the file name can be
+% given as an input to climada_entity_value_GDP_adjust
+entity = entity_base;
+entity_file = fullfile(pwd, 'entity.mat');
+save(entity_file,'entity');
+entity = climada_entity_value_GDP_adjust(entity_file);
+delete(entity_file);
+
+% fill in reference year
+entity.assets.reference_year = climada_global.present_reference_year;
+
+%% generate future entity by scaling up the adjusted entity
+% get scale-up factor
+[~, scale_up_factor]= climada_entity_scaleup_GDP(entity, GDP_future, year_future, year_start, centroids_ori, borders, check_figure, check_printplot);
+
+% scale up entity with that factor to generate entity_future 
+entity_future   = climada_entity_scaleup_factor(entity, scale_up_factor);   
 
 
 if ~exist('polygon', 'var'), polygon = []  ; end

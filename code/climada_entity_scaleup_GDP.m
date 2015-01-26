@@ -1,4 +1,4 @@
-function entity = climada_entity_scaleup_GDP(entity, GDP_future, year_future, year_start, centroids, borders, check_figure, check_printplot)
+function [entity, scale_up_factor]= climada_entity_scaleup_GDP(entity, GDP_future, year_future, year_start, centroids, borders, check_figure, check_printplot)
 
 % upscale a given entity based on GDP growth between two periods
 % NAME:
@@ -39,6 +39,7 @@ function entity = climada_entity_scaleup_GDP(entity, GDP_future, year_future, ye
 %           MDD: the mean damage degree
 % MODIFICATION HISTORY:
 % Lea Mueller, 20130412
+% Melanie Bieli, 20150125, added scale_up_factor as an additional output parameter 
 %-
 
 
@@ -55,7 +56,7 @@ if ~exist('borders'        , 'var'), borders         = [];end
 if ~exist('check_figure'   , 'var'), check_figure    = 1 ;end
 if ~exist('check_printplot', 'var'), check_printplot = [];end
 
-% set modul data directory
+% set module data directory
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
 xlsfilename = [modul_data_dir filesep 'World_GDP_constant_2000_2017.xlsx'];
