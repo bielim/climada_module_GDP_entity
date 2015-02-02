@@ -95,26 +95,36 @@ if isempty(entity_base), return, end
 % entity          = climada_entity_GDP(entity_base, GDP, year_start , centroids_ori, borders, check_figure, check_printplot);  
 % if isempty(entity), return, end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trying to incorporate
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% climada_entity_value_GDP_adjust
 
-% temporarily save the entity in the pwd, such that the file name can be
-% given as an input to climada_entity_value_GDP_adjust
+%% save the base entity and prepare GDP adjusted entity (including magic economic factor) today,
+% such that the file name can given as an input to climada_entity_value_GDP_adjust
 entity = entity_base;
-entity_file = fullfile(pwd, 'entity.mat');
-save(entity_file,'entity');
-entity = climada_entity_value_GDP_adjust(entity_file);
-delete(entity_file);
+entity_base_file = [climada_global.data_dir filesep 'entities' filesep 'entity_' country_name '_' num2str(asset_resolution_km) 'km_sum100.mat'];
+save(entity_base_file,'entity')
+fprintf('\t- Base entity (sum 100) saved in \n\t\t %s\n', entity_base_file);
 
+%prepare filename for GDP adjusted entity today
+entity_file = [climada_global.data_dir filesep 'entities' filesep 'entity_' country_name '_' num2str(asset_resolution_km) 'km_GDP_adj.mat'];
+save(entity_file,'entity')
+entity = climada_entity_value_GDP_adjust(entity_file);
 % fill in reference year
 entity.assets.reference_year = climada_global.present_reference_year;
+save(entity_file,'entity')
+GDP_adj_factor = sum(entity.assets.Value)/sum(entity_base.assets.Value);
+fprintf('\t- Entity today based on GDP adjusted created (total asset value is %4.4g USD, factor used: %4.4g)\n', sum(entity.assets.Value), GDP_adj_factor);
+
 
 %% generate future entity by scaling up the adjusted entity
 % get scale-up factor
+fprintf('\t- Entity %d created (based on GDP adjusted today and scale up factor)\n', climada_global.future_reference_year);
 [~, scale_up_factor]= climada_entity_scaleup_GDP(entity, GDP_future, year_future, year_start, centroids_ori, borders, check_figure, check_printplot);
 
 % scale up entity with that factor to generate entity_future 
 entity_future   = climada_entity_scaleup_factor(entity, scale_up_factor);   
+entity_future.assets.reference_year = climada_global.future_reference_year;
+entity_future_file = [climada_global.data_dir filesep 'entities' filesep 'entity_' country_name '_' num2str(asset_resolution_km) 'km_GDP_adj_future.mat'];
+save(entity_future_file,'entity_future')
+fprintf('\t\t saved in \n\t\t %s\n', entity_future_file);
 
 
 if ~exist('polygon', 'var'), polygon = []  ; end

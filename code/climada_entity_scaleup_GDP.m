@@ -301,6 +301,6 @@ entity.assets.hazard.comment = [entity.assets.hazard.comment ', scaled up for ' 
 entity.assets.reference_year = year_future;
 token = strtok(entity.assets.filename,',');
 fprintf('\t\t Entity assets "%s" scaled from %d to %d with average scale up factor %2.2f\n', token, year_start, year_future, mean(scale_up_factor))
-fprintf('\t\t Entity assets sum is %2.4g USD \n\n', sum(entity.assets.Value))
+fprintf('\t\t Entity assets sum is %2.4g USD \n', sum(entity.assets.Value))
 
 end
