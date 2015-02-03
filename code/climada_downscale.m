@@ -19,19 +19,19 @@ if ~(isfield(stru,'Longitude') & isfield(stru,'Latitude') & isfield(stru,f_name)
 end
     
 % minimal resolution
-res_x       = min(diff(unique(stru.Longitude)));
-res_y       = min(diff(unique(stru.Latitude)));
+res_x       = min(diff(unique(stru.lon)));
+res_y       = min(diff(unique(stru.lat)));
 
-new_min_lon = min(stru.Longitude) + res_x*downscale_factor/2 + res_x/2;
-new_min_lat = min(stru.Latitude)  + res_y*downscale_factor/2 + res_x/2;
-% new_max_lon = max(stru.Longitude) - res_x*downscale_factor/2 - res_x/2;
+new_min_lon = min(stru.lon) + res_x*downscale_factor/2 + res_x/2;
+new_min_lat = min(stru.lat)  + res_y*downscale_factor/2 + res_x/2;
+% new_max_lon = max(stru.lon) - res_x*downscale_factor/2 - res_x/2;
 % lon         = new_min_lon: res_x*downscale_factor: new_max_lon;
-% new_max_lat = max(stru.Latitude) - res_y*downscale_factor/2 - res_x/2;
+% new_max_lat = max(stru.lat) - res_y*downscale_factor/2 - res_x/2;
 % lat         = new_min_lat: res_x*downscale_factor: new_max_lat;
 
-f           = round( (stru.Longitude - new_min_lon) / (res_x*downscale_factor) );
+f           = round( (stru.lon - new_min_lon) / (res_x*downscale_factor) );
 new_lon     = new_min_lon + f * (res_x*downscale_factor);
-f           = round( (stru.Latitude  - new_min_lat) / (res_y*downscale_factor) );
+f           = round( (stru.lat  - new_min_lat) / (res_y*downscale_factor) );
 new_lat     = new_min_lat + f * (res_y*downscale_factor);
 
 % ismember(new_lon(1), lon)
@@ -45,8 +45,8 @@ for i = 1:length(new_lon)
     l1_ = find(l1);
     if all(l1_>=i)
         counter = counter+1;
-        stru_new_res.Longitude(counter) = new_lon(i);
-        stru_new_res.Latitude(counter)  = new_lat(l1_(1));
+        stru_new_res.lon(counter) = new_lon(i);
+        stru_new_res.lat(counter)  = new_lat(l1_(1));
         v_new(counter)                  = sum(v(l1_));
         %stru_new_res.Values(counter)   = sum(stru.Values(l1_));
     end

@@ -46,20 +46,20 @@ end
 
 if isempty(centroids)
     % take lat/lon from entity.assets
-    centroids.Longitude=entity.assets.Longitude;
-    centroids.Latitude=entity.assets.Latitude;
+    centroids.lon=entity.assets.lon;
+    centroids.lat=entity.assets.lat;
 end
 
 % calculate figure scaling parameters
-scale  = max(centroids.Longitude) - min(centroids.Longitude);
-scale2 =(max(centroids.Longitude) - min(centroids.Longitude))/...
-    (min(max(centroids.Latitude),80)-max(min(centroids.Latitude),-60));
+scale  = max(centroids.lon) - min(centroids.lon);
+scale2 =(max(centroids.lon) - min(centroids.lon))/...
+    (min(max(centroids.lat),80)-max(min(centroids.lat),-60));
 height = 0.5;
 if height*scale2 > 1.2; height = 1.2/scale2; end
 
 % calculate figure characteristics
-ax_lim = [min(centroids.Longitude)-scale/30          max(centroids.Longitude)+scale/30 ...
-    max(min(centroids.Latitude),-60)-scale/30  min(max(centroids.Latitude),80)+scale/30];
+ax_lim = [min(centroids.lon)-scale/30          max(centroids.lon)+scale/30 ...
+    max(min(centroids.lat),-60)-scale/30  min(max(centroids.lat),80)+scale/30];
 markersizepp = polyfit([15 62],[5 3],1);
 markersize   = polyval(markersizepp,ax_lim(2) - ax_lim(1));
 markersize(markersize<2) = 2;
@@ -73,7 +73,7 @@ markersize(markersize<2) = 2;
 % name_str = sprintf('Entity %s, Reference year %d', country_name{1}, entity.assets.reference_year);
 % set(fig,'Name',name_str)
 
-plot(entity.assets.Longitude, entity.assets.Latitude,'.', 'color', [238 224 229]/255, 'MarkerSize', 0.05);
+plot(entity.assets.lon, entity.assets.lat,'.', 'color', [238 224 229]/255, 'MarkerSize', 0.05);
 hold on
 
 if sum(entity.assets.Value)==0
@@ -81,7 +81,7 @@ if sum(entity.assets.Value)==0
 else
     % colormap(flipud(hot))
     % if length()
-    cbar = plotclr(entity.assets.Longitude, entity.assets.Latitude, entity.assets.Value,'s',markersize,1,...
+    cbar = plotclr(entity.assets.lon, entity.assets.lat, entity.assets.Value,'s',markersize,1,...
         [],[],[],[],1);
     set(get(cbar,'ylabel'),'String', 'value per pixel (exponential scale)' ,'fontsize',12);
     hold on

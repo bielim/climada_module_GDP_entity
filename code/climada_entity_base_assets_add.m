@@ -85,12 +85,12 @@ matrix_hollowout        = double(matrix_hollowout);
 buffer_value            = full(max(matrix_hollowout(:)));
 if buffer_value == 1;  buffer_value = 2; end
 mask_index              = matrix_hollowout >= 1 & matrix_hollowout < buffer_value;
-assets.Longitude        = X(mask_index)';
-assets.Latitude         = Y(mask_index)';
+assets.lon        = X(mask_index)';
+assets.lat         = Y(mask_index)';
 assets.Value            = full(values_distributed.values(mask_index))';
-assets.Deductible       = zeros(1,length(assets.Longitude));
+assets.Deductible       = zeros(1,length(assets.lon));
 assets.Cover            = full(values_distributed.values(mask_index))';
-assets.DamageFunID      = ones(1,length(assets.Longitude));
+assets.DamageFunID      = ones(1,length(assets.lon));
 %assets.Value_today      = full(values_distributed.values(mask_index))'; % _2012 replaced by _today
 assets.reference_year   = [];
 if sum(assets.Value)<100.5 && sum(assets.Value)>99.5

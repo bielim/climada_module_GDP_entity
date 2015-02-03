@@ -1,5 +1,4 @@
 function centroids = climada_matrix2centroid(matrix_buffer, lon_range, lat_range, country_name)
-
 % create centroids (structure) out of matrix_buffer and according range of
 % longitude and latitude
 % NAME:
@@ -23,8 +22,8 @@ function centroids = climada_matrix2centroid(matrix_buffer, lon_range, lat_range
 % OUTPUTS:
 %   centroids structure with following fields
 %      .centroid_ID : unambiguous ID number for each centroid
-%      .Longitude   : Longitude of centroid
-%      .Latitude    : Latitude of centroid
+%      .lon   : Longitude of centroid
+%      .lat    : Latitude of centroid
 %      .onLand      : 1 for on land (or higher if more than one country, 
 %                     zero for on sea, and max value for bufferzone
 %      .country_name: country_name for each centroid, enhanced with 
@@ -113,15 +112,15 @@ country_n     = [country_n repmat({'grid'},1,length(Longitude_s(cn))) ];
 
 % put all in centroids structure
 centroids.centroid_ID = 1:length(Longitude);     
-centroids.Longitude    = Longitude;
-centroids.Latitude     = Latitude;
+centroids.lon    = Longitude;
+centroids.lat     = Latitude;
 centroids.onLand       = onLand;
 centroids.country_name = country_n;
 
 no_onLand = sum(centroids.onLand <  max(centroids.onLand) & centroids.onLand>0 );
 no_buffer = sum(centroids.onLand == max(centroids.onLand));
 no_sea    = sum(centroids.onLand == 0);
-fprintf('\t\t --> %d centroids (%d on land and within buffer, %d outside)\n', length(centroids.Longitude), no_buffer, no_sea)
+fprintf('\t\t --> %d centroids (%d on land and within buffer, %d outside)\n', length(centroids.lon), no_buffer, no_sea)
 
 centroids.comment = sprintf('%s',country_name{1});
 

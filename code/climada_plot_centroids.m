@@ -1,5 +1,4 @@
 function fig = climada_plot_centroids(centroids, country_name, check_printplot, printname)
-
 % plot centroids on a map, differentiate for coastal land areas,
 % bufferzone, and further away (more inland and on sea)
 % NAME:
@@ -41,13 +40,13 @@ end
 
 %% calculate figure parameters
 markersize = 1.5;  
-scale      = max(centroids.Longitude) - min(centroids.Longitude);
-scale2     =(max(centroids.Longitude) - min(centroids.Longitude))/...
-            (min(max(centroids.Latitude),80)-max(min(centroids.Latitude),-60));
+scale      = max(centroids.lon) - min(centroids.lon);
+scale2     =(max(centroids.lon) - min(centroids.lon))/...
+            (min(max(centroids.lat),80)-max(min(centroids.lat),-60));
 height     = 0.5;
 if height*scale2 > 1.2; height = 1.2/scale2; end
-ax_lim = [min(centroids.Longitude)-scale/30          max(centroids.Longitude)+scale/30 ...
-          max(min(centroids.Latitude),-60)-scale/30  min(max(centroids.Latitude),80)+scale/30];
+ax_lim = [min(centroids.lon)-scale/30          max(centroids.lon)+scale/30 ...
+          max(min(centroids.lat),-60)-scale/30  min(max(centroids.lat),80)+scale/30];
 
       
 %% create figure      
@@ -78,7 +77,7 @@ if min(centroids.onLand) > 0
     centroids.onLand(indx) = 0;
 end
 
-cbar = plotclr(centroids.Longitude, centroids.Latitude, centroids.onLand, '+',markersize, 1, [],[],cmap);
+cbar = plotclr(centroids.lon, centroids.lat, centroids.onLand, '+',markersize, 1, [],[],cmap);
 colormap(cmap)
 caxis([0 size(cmap,1)])
 

@@ -80,14 +80,14 @@ end
 % end
 
 if check_figure
-    scale  = max(centroids.Longitude) - min(centroids.Longitude);
-    scale2 =(max(centroids.Longitude) - min(centroids.Longitude))/...
-        (min(max(centroids.Latitude),80)-max(min(centroids.Latitude),-60));
+    scale  = max(centroids.lon) - min(centroids.lon);
+    scale2 =(max(centroids.lon) - min(centroids.lon))/...
+        (min(max(centroids.lat),80)-max(min(centroids.lat),-60));
     height = 0.5;
     if height*scale2 > 1.2; height = 1.2/scale2; end
     
-    ax_lim = [min(centroids.Longitude)-scale/30          max(centroids.Longitude)+scale/30 ...
-        max(min(centroids.Latitude),-60)-scale/30  min(max(centroids.Latitude),80)+scale/30];
+    ax_lim = [min(centroids.lon)-scale/30          max(centroids.lon)+scale/30 ...
+        max(min(centroids.lat),-60)-scale/30  min(max(centroids.lat),80)+scale/30];
     markersizepp = polyfit([15 62],[5 3],1);
     markersize   = polyval(markersizepp,ax_lim(2) - ax_lim(1));
     markersize(markersize<2) = 2;
@@ -96,7 +96,7 @@ if check_figure
     name_str = sprintf('Entity %s %d', country_name{1}, year);
     set(fig,'Name',name_str)
     % colormap(flipud(hot))
-    cbar = plotclr(entity.assets.Longitude, entity.assets.Latitude, entity.assets.Value,'s',markersize,1,...
+    cbar = plotclr(entity.assets.lon, entity.assets.lat, entity.assets.Value,'s',markersize,1,...
         [],[],[],[],1);
     set(get(cbar,'ylabel'),'String', 'USD (exponential)' ,'fontsize',12);
     hold on
@@ -134,14 +134,14 @@ if check_figure
                 end
             end
             if ~isempty(polygon)
-                cn = inpoly([entity.assets.Longitude' entity.assets.Latitude'],polygon);
+                cn = inpoly([entity.assets.lon' entity.assets.lat'],polygon);
                 if ~any(cn)
                     fprintf('No assets within this polygon. Unable to proceed.\n')
                     return
                 end
                 entity_ori = entity;
-                entity.assets.Longitude     = entity.assets.Longitude(cn);
-                entity.assets.Latitude      = entity.assets.Latitude(cn);
+                entity.assets.lon     = entity.assets.lon(cn);
+                entity.assets.lat      = entity.assets.lat(cn);
                 entity.assets.Value         = entity.assets.Value(cn);
                 entity.assets.Deductible    = entity.assets.Deductible(cn);
                 entity.assets.Cover         = entity.assets.Cover(cn);
@@ -150,14 +150,14 @@ if check_figure
                 entity.assets.centroid_index= entity.assets.centroid_index(cn);
                 
                 clf
-                cbar = plotclr(entity.assets.Longitude, entity.assets.Latitude, entity.assets.Value,'s',markersize,1,...
+                cbar = plotclr(entity.assets.lon, entity.assets.lat, entity.assets.Value,'s',markersize,1,...
                     [],[],[],[],1);
                 set(get(cbar,'ylabel'),'String', 'USD (exponential)' ,'fontsize',12);
                 hold on
                 box on
                 climada_plot_world_borders(0.5)
                 title(entity.assets.hazard.comment)
-                plot(entity_ori.assets.Longitude(~cn),entity_ori.assets.Latitude(~cn),'s','markersize',markersize,'color',[199 199 199]/255);
+                plot(entity_ori.assets.lon(~cn),entity_ori.assets.lat(~cn),'s','markersize',markersize,'color',[199 199 199]/255);
                 axis(ax_lim)
                 axis equal
                 axis(ax_lim)
@@ -170,7 +170,7 @@ if check_figure
                         redo = 1;
                         entity = entity_ori;
                         clf
-                        cbar = plotclr(entity.assets.Longitude, entity.assets.Latitude, entity.assets.Value,'s',markersize,1,...
+                        cbar = plotclr(entity.assets.lon, entity.assets.lat, entity.assets.Value,'s',markersize,1,...
                             [],[],[],[],1);
                         set(get(cbar,'ylabel'),'String', 'USD (exponential)' ,'fontsize',12);
                         climada_plot_world_borders(0.5)
@@ -188,9 +188,9 @@ if check_figure
 end
 
 % cut out the centroids
-cn = inpoly([centroids.Longitude' centroids.Latitude'],polygon);
-centroids.Longitude     = centroids.Longitude(cn);
-centroids.Latitude      = centroids.Latitude(cn);
+cn = inpoly([centroids.lon' centroids.lat'],polygon);
+centroids.lon     = centroids.lon(cn);
+centroids.lat      = centroids.lat(cn);
 % centroids.centroid_ID = centroids.centroid_ID(cn);
 centroids.centroid_ID   = 1:sum(cn);
 centroids.onLand        = centroids.onLand(cn);
@@ -199,13 +199,13 @@ if isfield(centroids,'dist_to_coast')
     centroids.dist_to_coast  = centroids.dist_to_coast(cn);
 end
 
-% plot(centroids.Longitude, centroids.Latitude, 'xr')
+% plot(centroids.lon, centroids.lat, 'xr')
 
 % encode assets to new centroids
 entity.assets = climada_assets_encode(entity.assets,centroids);
 
 % climada_plot_world_borders
-% plot(centroids.Longitude(1:1341), centroids.Latitude(1:1341), 'xr')
-% plot(centroids.Longitude(1342:end), centroids.Latitude(1342:end), '.b')
+% plot(centroids.lon(1:1341), centroids.lat(1:1341), 'xr')
+% plot(centroids.lon(1342:end), centroids.lat(1342:end), '.b')
 
 end
