@@ -79,7 +79,7 @@ png_filename = [modul_data_dir filesep 'night_light_2010_10km.png'];
 %png_filename = [modul_data_dir filesep 'night_light_2012_1km.png'];
 
 if isempty(country_name)
-    fprintf('No country chosen. Unable to proceed.\n')
+    fprintf('No country chosen, aborted\n')
     return
 end
 
@@ -93,7 +93,7 @@ if isempty(night_light)
         if exist(png_filename,'file')
             night_light = climada_night_light_read(png_filename,0,0,1);
         else
-            fprintf('Night light %s not found. Unable to proceed. \n', png_filename)
+            fprintf('Night light %s not found, aborted\n', png_filename)
             values_distributed = []; pp = [];
             return
         end
@@ -119,7 +119,7 @@ end
 pp_str(end-1:end) = [];
 % pp_str     = num2str(pp,', %2.1e');
 if ~silent_mode;
-    fprintf('\t Transform night lights to values (nonlinearly or linearly)\n\t %s\n',pp_str);
+    fprintf('Night lights to values: %s\n',pp_str);
 end
 pp_str_      = strrep(strrep(strrep(strrep(strrep(strrep(pp_str,' ',''),'^',''),'0.',''),'+','_'),'*',''),'.','');
 pp_str_(1:2) = [];
@@ -146,7 +146,7 @@ if isempty(border_mask), return, end
 if any(size(border_mask.mask{1}) ~= size(night_light.values))
     asset_resolution_km = climada_geo_distance(0,0,border_mask.resolution_x,0)/1000;
     asset_resolution_km = ceil(asset_resolution_km/10)*10;
-    cprintf([1,0.5,0],'\t Night light resolution (~%dkm) does not match border mask resolution (~%dkm)\n',input_resolution_km, asset_resolution_km)
+    fprintf('Error: Night light resolution (~%dkm) does not match border mask resolution (~%dkm)\n',input_resolution_km, asset_resolution_km)
     return
 else
     asset_resolution_km = input_resolution_km;
@@ -167,16 +167,16 @@ if isempty(borders), return, end
 % create country mask for selected country
 c_indx       = strcmp(country_name, borders.name);
 if sum(c_indx)==0
-    fprintf('ERROR: %s, country name does not match any border information\n',mfilename)
+    fprintf('ERROR %s: country name does not match any border information\n',mfilename)
     return
 end
 country_mask = border_mask.mask{c_indx};
 if ~any(country_mask)
-    cprintf([1,0.5,0],'\t %s is too small and does not exist as a mask. Unable to proceed.\n', country_name)
+    fprintf('%s is too small and does not exist as a mask, aborted\n',country_name)
 end
 values_dist  = values .* country_mask;
 if ~any(values_dist)
-    cprintf([1,0.5,0],'\t No light data available for %s. Assume uniform distribution.\n', country_name)
+    fprintf('No light data available for %s - assuming uniform distribution\n',country_name)
     values_dist  = country_mask;
     any(country_mask)
 end
@@ -277,7 +277,7 @@ if check_figure
         foldername = [filesep 'results' filesep 'Values_distributed_' country_name '_' int2str(input_resolution_km) 'km_' pp_str_ '.pdf'];
         print(fig,'-dpdf',[climada_global.data_dir foldername])
         %close
-        cprintf([255 127 36 ]/255,'\t\t saved 1 FIGURE in folder ..%s \n', foldername);
+        fprintf('saved 1 FIGURE in folder ..%s\n', foldername);
         
     end
 end
@@ -286,7 +286,7 @@ if save_on
     foldername = [modul_data_dir filesep 'Values_distributed_' country_name '_' int2str(input_resolution_km) 'km_' pp_str_ '.mat'];
     save(foldername,'values_distributed')
     if ~silent_mode
-        cprintf([113 198 113]/255,'\t\t saved 1 mat-file in folder %s \n',foldername)
+        cfprintf('saved 1 mat-file in folder %s\n',foldername)
     end
 end
 

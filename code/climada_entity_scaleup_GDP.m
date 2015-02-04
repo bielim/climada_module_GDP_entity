@@ -1,5 +1,4 @@
-function [entity, scale_up_factor]= climada_entity_scaleup_GDP(entity, GDP_future, year_future, year_start, centroids, borders, check_figure, check_printplot)
-
+function [entity,scale_up_factor]=climada_entity_scaleup_GDP(entity,GDP_future,year_future,year_start,centroids,borders,check_figure,check_printplot)
 % upscale a given entity based on GDP growth between two periods
 % NAME:
 %   climada_entity_scaleup_GDP
@@ -106,13 +105,13 @@ if isempty(borders)
         %map_border_file = strrep(climada_global.map_border_file,'.gen','.mat');
         map_border_file = [modul_data_dir filesep 'world_50m.mat'];
     else
-        fprintf('\t\t no map found\n Unable to proceed.\n')
+        fprintf('Error: no map found, aborted\n')
         return
     end
     try
         load(map_border_file)
     catch err
-        fprintf('\t\t create and save world borders as mat-file...')
+        fprintf('create and save world borders as mat-file...')
         climada_plot_world_borders
         close
         fprintf('done\n')
@@ -127,9 +126,9 @@ end
 % basic check if entity matches with centroids
 uni_index = unique(entity.assets.centroid_index);
 if all(ismember(uni_index,centroids.centroid_ID))
-    fprintf('\t\t Assets are all encoded to valid centroids.\n')
+    fprintf('Assets are all encoded to valid centroids\n')
 else
-    fprintf('\t\t Not all assets within entities match with given centroids!\n\t\t Can"t proceed\n')
+    fprintf('Error: Not all assets within entities match with given centroids, aborted\n')
     entity = [];
     return
 end
@@ -140,8 +139,8 @@ country_index = ismember(centroids.centroid_ID, uni_index);
 country_uni   = unique(centroids.country_name(country_index));
 iscountry     = ~ismember(country_uni,{'buffer' 'grid'});
 country_uni   = country_uni(iscountry);
-if length(country_uni) == 1 & isempty(country_uni{1})
-    fprintf('\t\t No country names for centroids!\n\t\t Unable to proceed.\n')
+if length(country_uni) == 1 && isempty(country_uni{1})
+    fprintf('Error: No country names for centroids, aborted\n')
     entity = [];
     return
 end
@@ -194,7 +193,7 @@ for c_i = 1:length(country_uni)
         c_index = strcmp(borders.name(c_name), GDP_future.country_names);
     else
         c_index = '';
-        fprintf('\t\t No country found for "%s"\n', country_uni{c_i})
+        fprintf('No country found for "%s"\n', country_uni{c_i})
     end
     if ~any(c_index) %&& ~strcmp(ISO3_uni(c_i),'sea')
         if borders.groupID(c_name)>0
@@ -207,19 +206,19 @@ for c_i = 1:length(country_uni)
         %GDP_future.country_names{219}
         
         %isnan(GDP_future.country_names)
-        [a ia] = ismember(borders.name(groupIndex), GDP_future.country_names);
+        [a,ia] = ismember(borders.name(groupIndex), GDP_future.country_names);
         c_index = ia(ia>0);
         if length(c_index)>1
             names_str = sprintf('%s, ',GDP_future.country_names{c_index}); names_str(end-1:end) = [];
-            fprintf('\t\t More than one country within group has GDP information (%s)\n',names_str);
+            fprintf('More than one country within group has GDP information (%s)\n',names_str);
             c_index = c_index(1);
-            fprintf('\t\t Take GDP information  from %s\n',GDP_future.country_names{c_index});
-            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP_future.country_names{c_index})
+            fprintf('Take GDP information  from %s\n',GDP_future.country_names{c_index});
+            fprintf('%s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP_future.country_names{c_index})
         else
-            fprintf('\t\t %s is not in GDP database\n',borders.name{c_name})
+            fprintf('%s is not in GDP database\n',borders.name{c_name})
         end
     end
-    if any(c_index) & any(~isnan(GDP_future.value(c_index,:))) & any(nonzeros(GDP_future.value(c_index,:)))
+    if any(c_index) && any(~isnan(GDP_future.value(c_index,:))) && any(nonzeros(GDP_future.value(c_index,:)))
         % check if requested year is within the forecasted values
         year_f_index = find(GDP_future.year == year_future);
         year_s_index = find(GDP_future.year == year_start, 1);
@@ -260,7 +259,7 @@ for c_i = 1:length(country_uni)
             legendstr{end+1} = [num2str(scale_up_factor(c_i),'%2.2f') ': ' borders.name{c_name}];
         end
     else
-        fprintf('WARNING: %s: no data available\n',borders.name{c_name});
+        fprintf('WARNING: %s: no GDP data available\n',borders.name{c_name});
         return
     end
 end
@@ -292,7 +291,7 @@ for c_i = 1:length(country_uni)
         entity.assets.Value(en_index)      = scale_up_factor(c_i) * entity.assets.Value(en_index);
         entity.assets.Deductible(en_index) = scale_up_factor(c_i) * entity.assets.Deductible(en_index);
         entity.assets.Cover(en_index)      = scale_up_factor(c_i) * entity.assets.Cover(en_index);
-        fprintf('\t\t %d centroids are within %s\n', sum(en_index), country_uni{c_i})
+        fprintf('%d centroids are within %s\n', sum(en_index), country_uni{c_i})
     else
         fprintf('No centroids within %s\n',country_uni{c_i})
     end
@@ -300,7 +299,7 @@ end
 entity.assets.hazard.comment = [entity.assets.hazard.comment ', scaled up for ' int2str(year_future)];
 entity.assets.reference_year = year_future;
 token = strtok(entity.assets.filename,',');
-fprintf('\t\t Entity assets "%s" scaled from %d to %d with average scale up factor %2.2f\n', token, year_start, year_future, mean(scale_up_factor))
-fprintf('\t\t Entity assets sum is %2.4g USD \n', sum(entity.assets.Value))
+fprintf('Entity assets "%s" scaled from %d to %d with average scale up factor %2.2f\n', token, year_start, year_future, mean(scale_up_factor))
+fprintf('Entity assets sum is %2.4g USD \n', sum(entity.assets.Value))
 
 end

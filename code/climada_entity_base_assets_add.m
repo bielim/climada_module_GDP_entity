@@ -49,22 +49,18 @@ if ~exist('hollow_name'       , 'var'), hollow_name = [];end
 if ~exist('no_wbar'           , 'var'), no_wbar     = 0 ;end
 
 % PARAMETERS
-
-% set modul data directory
-modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 %
 % define the file with an empty entity (used as 'template')
 entity_global_without_assets_file=[climada_global.data_dir filesep 'entities' filesep 'entity_template.xls'];
-%entity_global_without_assets_file=[modul_data_dir filesep 'entity_global_without_assets.xls']; % until 20141215
 
 
 if ~climada_check_matfile(entity_global_without_assets_file)
-    fprintf('\t a) Read from excel, entity without assets (damagefunctions, measures, discount) ...\n\t    ')
+    fprintf(' a) Read from excel, entity without assets (damagefunctions, measures, discount) ...\n\t    ')
     entity = climada_entity_read_wo_assets(entity_global_without_assets_file);
 else
     [fP,fN]=fileparts(entity_global_without_assets_file);
     mat_filename=[fP filesep fN '.mat'];
-    fprintf('\t a) Load wildcard entity without assets (damagefunctions, measures, discount)\n')
+    fprintf(' a) Load wildcard entity without assets (damagefunctions, measures, discount)\n')
     load(mat_filename);
 end
 
@@ -74,7 +70,7 @@ entity_base = entity; clear entity;
 
 
 % take assets from distributed values matrix
-fprintf('\t b) Take assets from distributed values matrix\n')
+fprintf(' b) Take assets from distributed values matrix\n')
 assets                  = [];
 assets.comment          = [country_name_str ', ' values_distributed.comment hollow_name];
 assets.filename         = country_name_str; % since we did not read from Excel
@@ -98,13 +94,13 @@ if sum(assets.Value)<100.5 && sum(assets.Value)>99.5
 end
 
 if ~any(assets.Value)%all zeros
-    fprintf('\t\t No values within assets for %s\n', country_name_str)
+    fprintf('Error: No values within assets for %s\n', country_name_str)
     %centroids = []; entity = []; entity_forecast = [];
     return
 end
 
 % encode assets
-fprintf('\t c) Encode assets to centroids\n')
+fprintf(' c) Encode assets to centroids\n')
 entity_base.assets = climada_assets_encode(assets, centroids);
 
 return

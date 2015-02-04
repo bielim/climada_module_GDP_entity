@@ -46,6 +46,8 @@ function [centroids, entity] = climada_create_centroids_entity_base(country_name
 % david.bresch@gmail.com, 20141229, tolerant iro country names
 %-
 
+centroids=[];entity=[]; % init
+
 close all
 global climada_global
 if ~climada_init_vars, return; end
@@ -69,7 +71,6 @@ entity    = [];
 % check_figure             = 1;
 % save_on_entity_centroids = 0;
 
-
 % set modul data directory
 modul_data_dir = [fileparts(fileparts(mfilename('fullpath'))) filesep 'data'];
 
@@ -82,13 +83,13 @@ check_printplot = 0;
 if isempty(pp), pp = []  ; end
 
 
-%% 0a) load world borders
+% 0a) load world borders
 % fprintf('0) \t a) Load world borders including regions\n')
 % borders = climada_load_world_borders(borders);
 % if isempty(borders), return, end
 
 
-%% 0b) load country masks
+% 0b) load country masks
 % load border_mask for all countries (original resolution ~10km)
 % fprintf('0)\t b) Load border masks...')
 % fprintf(' done\n')
@@ -96,7 +97,7 @@ border_mask = climada_load_border_mask(border_mask, asset_resolution_km);
 if isempty(border_mask), return, end
 
 
-%% 0c) ask for country or region
+% 0c) ask for country or region
 
 if isempty(country_name)
     [country_name,country_ISO3] = climada_country_name('Single');
@@ -106,60 +107,22 @@ end
 [country_name_chckd,country_ISO3] = climada_country_name(country_name);
 if isempty(country_name_chckd)
     country_ISO3='XXX'; % be tolerant...
-    cprintf([1,0.5,0],'Warning: Might be an unorthodox country name as input - check results\n')
+    fprintf('Warning: Might be an unorthodox country name as input - check results\n')
 else
     country_name=country_name_chckd;
 end
 country_name_str = strrep(country_name,' ',''); % remove spaces
-
-%%
-%     if ~iscell(country_name)
-%         country_name = {country_name};
-%     end
-
-% % check if country is within a group (e.g. China with Taiwan) and expand
-% % country_name with other countries within group
-% country_name_ori = country_name;
-% if check_for_groups
-%     for c_i = 1:length(country_name)
-%         c_index = strcmp(country_name{c_i},borders.name);
-%         if borders.groupID(c_index)>0 %~isnan(borders.groupID(c_index)) ;
-%             group_index    = borders.groupID == borders.groupID(c_index);
-%             country_name   = unique([country_name borders.name(group_index)]);
-%         end
-%     end
-% end
-% if isempty(country_name_str)
-%     country_name_str = sprintf('%s, ',country_name{:});
-%     country_name_str(end-1:end) = [];
-% end
-%
-%
-% if length(country_name_ori) ~= length(country_name)
-%     [C, ia] = unique([country_name country_name_ori]);
-%     added_countries = ~ismember(country_name,country_name_ori);
-%     added_countries = sprintf('%s, ',country_name{added_countries});
-%     added_countries(end-1:end) = [];
-%     fprintf('\t\t Added the following countries: %s\n',added_countries)
-% end
-% country_name_str = strrep(country_name_str,'.','');
-
-%%
-
 
 if hollowout
     hollow_name = 'hollow';
 else
     hollow_name = '';
 end
-% if year>2010; year_to_distribute = 2010; else year_to_distribute = year; end
-% cprintf( [46 139 87 ]/255, '\t --> *** %s %d (%d) and %d on ~%dkm %s ***\n', ...
-%          country_name_str, year, year_to_distribute, year_forecast, asset_resolution_km, hollow_name);
-cprintf( [46 139 87 ]/255, '\t *** %s on roughly %d km %s ***\n', ...
+fprintf('*** %s on roughly %d km %s ***\n', ...
     country_name_str, asset_resolution_km, hollow_name);
 
 
-%% 1) Cut out night lights for the specific country and transform nonlinearly
+% 1) Cut out night lights for the specific country and transform nonlinearly
 silent_mode = 0;
 save_on     = 0;
 % pp is the parameter of second order polynomial function to transform night lights
@@ -169,7 +132,7 @@ save_on     = 0;
     borders, border_mask, 0, check_printplot, save_on, silent_mode);
 if isempty(values_distributed); return; end
 if ~any(values_distributed.values)
-    cprintf('r','\t\t No light data available for %s. Unable to proceed.\n', country_name_str)
+    fprintf('Warning: No light data available for %s, aborted\n', country_name_str)
     return
 end
 
@@ -177,10 +140,10 @@ end
 pp_str = climada_parameter_string(pp);
 
 
-%% 1b) Downscale resolution
+% 1b) Downscale resolution
 asset_resolution_km_ori = asset_resolution_km;
 fprintf('1) Downscale distributed values to ~%dkm ...  ', asset_resolution_km)
-[values_distributed, X, Y asset_resolution_km] = climada_resolution_downscale(values_distributed, asset_resolution_km, 'sum');
+[values_distributed,X,Y,asset_resolution_km]=climada_resolution_downscale(values_distributed, asset_resolution_km, 'sum');
 values_distributed.values(values_distributed.values<0) = 0;
 if asset_resolution_km_ori ~= asset_resolution_km
     fprintf('(roughly ~%dkm)', asset_resolution_km)
@@ -188,8 +151,7 @@ end
 fprintf(' done\n')
 
 
-
-%% 2) Create centroids
+% 2) Create centroids
 % country_index = ismember(border_mask.name,country_name);
 fprintf('2) Create centroids for %s on a ~%d km resolution\n', country_name_str, asset_resolution_km)
 
@@ -200,7 +162,7 @@ if asset_resolution_km>buffer_km
     buffer_km = 2*asset_resolution_km;
 end
 
-fprintf('\t a) Create buffer of ~%dkm\n',buffer_km)
+fprintf(' a) Create buffer of ~%dkm\n',buffer_km)
 no_pixel_buffer = ceil(buffer_km/asset_resolution_km);
 printname       = sprintf('%s_%dkm',country_name_str, asset_resolution_km);
 printname_pp    = [printname ', ' pp_str];
@@ -208,9 +170,9 @@ if hollowout
     printname        = [printname '_' hollow_name];
     hollowout_km     = 500;
     no_pixel_hollow  = ceil(hollowout_km/asset_resolution_km);
-    fprintf('\t b) Select only coastal areas, hollowout matrix of ~%dkm\n',hollowout_km)
+    fprintf(' b) Select only coastal areas, hollowout matrix of ~%dkm\n',hollowout_km)
 else
-    fprintf('\t b) Select entire country (hollowout is set to 0) \n')
+    fprintf(' b) Select entire country (hollowout is set to 0) \n')
     no_pixel_hollow = 0;
 end
 
@@ -241,7 +203,7 @@ end
 % matrix_hollowout = logical(matrix_hollowout + matrix_structure.values);
 
 if ~any(find(matrix_hollowout))
-    fprintf('\t\t No pixels within %s after hollowout (not at coast)\n',country_name_str)
+    fprintf(' No pixels within %s after hollowout (not at coast)\n',country_name_str)
     return
 end
 
@@ -266,20 +228,17 @@ centroids.admin0_ISO3=country_ISO3;
 if save_on_entity_centroids
     centroids_filename = [climada_global.system_dir filesep 'centroids_' strrep(country_name_str,', ','') '_' int2str(asset_resolution_km) 'km_' hollow_name];
     save(centroids_filename,'centroids')
-    fprintf('\t d) Save centroids in \n')
-    cprintf([113 198 113]/255,'\t\t %s\n',centroids_filename)
+    fprintf(' d) Save centroids in %s\n',centroids_filename)
 end
 
 
-
-
-%% 3a) Create base entity file and save in xls
+% 3a) Create base entity file and save in xls
 
 fprintf('3) Create base entity\n')
 
 % create entity, read wildcard entity, add assets from values_distributed,
 % and encode to centroids
-entity = climada_entity_base_assets_add(values_distributed, centroids, country_name_str, matrix_hollowout,  X, Y, hollow_name, no_wbar);
+entity=climada_entity_base_assets_add(values_distributed, centroids, country_name_str, matrix_hollowout,  X, Y, hollow_name, no_wbar);
 
 % add country info
 entity.assets.admin0_name=country_name;
@@ -292,11 +251,10 @@ if save_on_entity_centroids
     entity_filename   = ['entity_' strrep(country_name_str,', ','') '_base_' int2str(asset_resolution_km) 'km_' hollow_name];
     entity_foldername = [climada_global.data_dir filesep 'entities' filesep entity_filename];
     save(entity_foldername, 'entity')
-    fprintf('\t d) Save entity in\n')
-    cprintf([113 198 113]/255,'\t\t %s\n',entity_foldername)
+    fprintf(' d) Save entity in %s\n',entity_foldername)
     
     if save_entity_xls
-        fprintf('\t e)')
+        fprintf(' e)')
         entity_xls_file = [entity_foldername '.xls'];
         try
             climada_entity_save_xls(entity, entity_xls_file)

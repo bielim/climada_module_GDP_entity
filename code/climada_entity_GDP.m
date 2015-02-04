@@ -130,15 +130,15 @@ end
 if isempty(borders)
     borders = climada_load_world_borders;
 end
-if isempty(borders), fprintf('\t\t no map found\n Unable to proceed.\n'), return, end
+if isempty(borders), fprintf('Error: no map found, aborted\n'), return, end
 
 
 % basic check if entity matches with centroids
 uni_index = unique(entity_base.assets.centroid_index);
 if all(ismember(uni_index,centroids.centroid_ID))
-    fprintf('\t\t Assets are all encoded to valid centroids.\n')
+    fprintf('Assets are all encoded to valid centroids.\n')
 else
-    fprintf('\t\t Not all assets within entities match with given centroids!\n\t\t Can"t proceed\n')
+    fprintf('Error: Not all assets within entities match with given centroids, aborted\n')
     entity = [];
     return
 end
@@ -151,7 +151,7 @@ country_uni   = unique(centroids.country_name(country_index));
 iscountry     = ~ismember(country_uni,{'buffer' 'grid'});
 country_uni   = country_uni(iscountry);
 if length(country_uni) == 1 && isempty(country_uni{1})
-    fprintf('\t\t No country names for centroids!\n\t\t Unable to proceed.\n')
+    fprintf('Error: No country names for centroids, aborted\n')
     entity = [];
     return
 end
@@ -172,7 +172,7 @@ for c_i = 1:length(country_uni)
         c_index = strcmp(borders.name(c_name), GDP.country_names);
     else
         c_index = '';
-        fprintf('\t\t No country found for "%s"\n', country_uni{c_i})
+        fprintf('Warning: No country found for "%s"\n', country_uni{c_i})
     end
     
     
@@ -187,12 +187,12 @@ for c_i = 1:length(country_uni)
         c_index = ia(ia>0);
         if length(c_index)>1
             names_str = sprintf('%s, ',GDP.country_names{c_index}); names_str(end-1:end) = [];
-            fprintf('\t\t More than one country within group has GDP information (%s)\n',names_str);
+            fprintf('More than one country within group has GDP information (%s)\n',names_str);
             c_index = c_index(1);
-            fprintf('\t\t Take GDP information  from %s\n',GDP.country_names{c_index});
-            fprintf('\t\t %s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP.country_names{c_index})
+            fprintf('Take GDP information  from %s\n',GDP.country_names{c_index});
+            fprintf('%s is not in GDP database, but in group with %s\n',borders.name{c_name}, GDP.country_names{c_index})
         else
-            fprintf('\t\t %s is not in GDP database\n',borders.name{c_name})
+            fprintf('%s is not in GDP database\n',borders.name{c_name})
         end
     end
     
@@ -208,25 +208,25 @@ for c_i = 1:length(country_uni)
         % factor = "GDP for a given country and year" / 100
         GDP_val        = GDP.value(c_index, year_s_index);
         if isnan(GDP_val)
-            fprintf('\t\t No GDP value for year %d available. Stick with base entity where all assets sum up to 100.\n', year_requested)
+            fprintf('No GDP value for year %d available. Stick with base entity where all assets sum up to 100.\n', year_requested)
             entity = entity_base;
             entity.assets.reference_year = 100;
             return
         end
         scaleup_factor = GDP_val / 100;
         entity         = climada_entity_scaleup_factor(entity_base, scaleup_factor);
-        fprintf('\t\t GDP for %s in %d is %2.4g USD (current) \n',GDP.country_names{c_index}, year_requested, GDP_val);
+        fprintf('GDP for %s in %d is %2.4g USD (current) \n',GDP.country_names{c_index}, year_requested, GDP_val);
         entity.assets.reference_year = year_requested;
         
         if sum(entity_base.assets.Value) >= 99.5 &&  sum(entity_base.assets.Value) <= 100.5
-            fprintf('\t\t Entity assets covers %2.1f%% of %s, i.e. GDP for entire %s in %d is %2.4g USD\n',...
+            fprintf('Entity assets covers %2.1f%% of %s, i.e. GDP for entire %s in %d is %2.4g USD\n',...
                 sum(entity_base.assets.Value), GDP.country_names{c_index}, GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         elseif sum(entity_base.assets.Value) <100
-            fprintf('\t\t Entity assets covers %2.1f%% of %s, i.e. GDP for that region in %d is %2.4g USD\n',...
+            fprintf('Entity assets covers %2.1f%% of %s, i.e. GDP for that region in %d is %2.4g USD\n',...
                 sum(entity_base.assets.Value), GDP.country_names{c_index}, year_requested, sum(entity.assets.Value));
         end
     else
-        fprintf('\t\t %s: no GDP data available. Stick with base entity where all assets sum up to 100.\n',borders.name{c_name})
+        fprintf('%s: no GDP data available. Stick with base entity where all assets sum up to 100.\n',borders.name{c_name})
         entity = entity_base;
         entity.assets.reference_year = 100;
         %return
@@ -234,12 +234,12 @@ for c_i = 1:length(country_uni)
 end
 
 if exist('year_requested_step_2', 'var') % if year_requested > GDP_latest_year
-    fprintf('\nStep 2: Entity based on GDP %d to entity based on GDP %d\n', GDP_latest_year, year_requested_step_2)
+    fprintf('Step 2: Entity based on GDP %d to entity based on GDP %d\n', GDP_latest_year, year_requested_step_2)
     if entity.assets.reference_year ~= 100
         GDP_future = [];
         entity = climada_entity_scaleup_GDP(entity, GDP_future, year_requested_step_2, GDP_latest_year, centroids, borders, check_figure, check_printplot);
     else
-        fprintf('\t\t Stick with base entity where all assets sum up to 100.\n')
+        fprintf('Stick with base entity where all assets sum up to 100.\n')
     end
 end
 
